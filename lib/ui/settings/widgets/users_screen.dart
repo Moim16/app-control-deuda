@@ -75,6 +75,7 @@ class _UsersScreenState extends State<UsersScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Usuarios con acceso')),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'fab-usuarios',
         onPressed: () => _abrir(),
         icon: const Icon(Icons.person_add_alt),
         label: const Text('Dar acceso'),
@@ -82,36 +83,36 @@ class _UsersScreenState extends State<UsersScreen> {
       body: _error != null && lista == null
           ? ErrorConReintento(mensaje: _error!, onReintentar: _cargar)
           : lista == null
-              ? const Center(child: CircularProgressIndicator())
-              : ListView(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 90),
-                  children: [
-                    Text(
-                      'Quien entra a ver tus cuentas. Un usuario de solo lectura ve '
-                      'únicamente lo que le asignes y puede comentar, nada más.',
-                      style: TextStyle(fontSize: 13, color: t.muted, height: 1.45),
-                    ),
-                    const SizedBox(height: 14),
-                    Card(
-                      clipBehavior: Clip.antiAlias,
-                      child: Column(
-                        children: [
-                          for (final (i, u) in lista.indexed) ...[
-                            if (i > 0) Divider(height: 1, color: t.line),
-                            _Fila(
-                              u: u,
-                              soyYo: u.id == yo?.id,
-                              // A uno mismo no se edita desde aquí: la
-                              // contraseña propia va en Ajustes, y quitarse los
-                              // permisos a sí mismo deja la cuenta sin dueño.
-                              onTap: u.id == yo?.id ? null : () => _abrir(u),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ],
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 90),
+              children: [
+                Text(
+                  'Quien entra a ver tus cuentas. Un usuario de solo lectura ve '
+                  'únicamente lo que le asignes y puede comentar, nada más.',
+                  style: TextStyle(fontSize: 13, color: t.muted, height: 1.45),
                 ),
+                const SizedBox(height: 14),
+                Card(
+                  clipBehavior: Clip.antiAlias,
+                  child: Column(
+                    children: [
+                      for (final (i, u) in lista.indexed) ...[
+                        if (i > 0) Divider(height: 1, color: t.line),
+                        _Fila(
+                          u: u,
+                          soyYo: u.id == yo?.id,
+                          // A uno mismo no se edita desde aquí: la
+                          // contraseña propia va en Ajustes, y quitarse los
+                          // permisos a sí mismo deja la cuenta sin dueño.
+                          onTap: u.id == yo?.id ? null : () => _abrir(u),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }
@@ -146,10 +147,10 @@ class _Fila extends StatelessWidget {
           u.isOwner
               ? 've y edita todo'
               : u.debtIds.isEmpty
-                  // Es lo que hay que decir: un viewer sin asignaciones entra y
-                  // no ve nada, y desde fuera parece que la app falla.
-                  ? 'sin nada asignado: no ve nada'
-                  : plural(u.debtIds.length, 'deuda asignada', 'deudas asignadas'),
+              // Es lo que hay que decir: un viewer sin asignaciones entra y
+              // no ve nada, y desde fuera parece que la app falla.
+              ? 'sin nada asignado: no ve nada'
+              : plural(u.debtIds.length, 'deuda asignada', 'deudas asignadas'),
         ].join(' · '),
         style: TextStyle(
           fontSize: 12.5,
@@ -180,8 +181,9 @@ class _Form extends StatefulWidget {
 
 class _FormState extends State<_Form> {
   late final TextEditingController _usuario = TextEditingController();
-  late final TextEditingController _nombre =
-      TextEditingController(text: widget.usuario?.fullName ?? '');
+  late final TextEditingController _nombre = TextEditingController(
+    text: widget.usuario?.fullName ?? '',
+  );
   late final TextEditingController _password = TextEditingController();
 
   late String _rol = widget.usuario?.role ?? 'viewer';
@@ -302,10 +304,7 @@ class _FormState extends State<_Form> {
                 controller: _nombre,
                 maxLength: 80,
                 textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(
-                  labelText: 'Nombre (opcional)',
-                  counterText: '',
-                ),
+                decoration: const InputDecoration(labelText: 'Nombre (opcional)', counterText: ''),
               ),
               const SizedBox(height: 14),
 
@@ -379,7 +378,7 @@ class _FormState extends State<_Form> {
                   _debtIds.isEmpty
                       ? 'Sin ninguna marcada no verá nada al entrar.'
                       : 'Solo verá lo marcado, y desde el otro lado: su deuda se le '
-                          'cuenta como "me deben".',
+                            'cuenta como "me deben".',
                   style: TextStyle(
                     fontSize: 12,
                     color: _debtIds.isEmpty ? t.half : t.faint,

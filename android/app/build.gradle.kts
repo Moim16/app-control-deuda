@@ -12,6 +12,10 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // Lo pide flutter_local_notifications: usa las clases de fecha y hora
+        // de Java 8, que en las versiones viejas de Android no existen, y el
+        // desugaring las trae dentro del APK.
+        isCoreLibraryDesugaringEnabled = true
     }
 
     defaultConfig {
@@ -36,6 +40,10 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
 
 kotlin {

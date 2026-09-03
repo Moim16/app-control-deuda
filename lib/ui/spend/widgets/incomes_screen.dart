@@ -34,6 +34,7 @@ class IncomesScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Ingresos')),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'fab-ingresos',
         onPressed: () => _abrirForm(context, hoy: hoy),
         icon: const Icon(Icons.add),
         label: const Text('Ingreso'),
@@ -124,14 +125,9 @@ class IncomesScreen extends StatelessWidget {
   }
 
   /// Del más nuevo al más viejo.
-  static List<Income> _ordenados(List<Income> l) =>
-      [...l]..sort((a, b) => b.day.compareTo(a.day));
+  static List<Income> _ordenados(List<Income> l) => [...l]..sort((a, b) => b.day.compareTo(a.day));
 
-  Future<void> _abrirForm(
-    BuildContext context, {
-    required String hoy,
-    Income? ingreso,
-  }) async {
+  Future<void> _abrirForm(BuildContext context, {required String hoy, Income? ingreso}) async {
     final guardado = await showModalBottomSheet<bool>(
       context: context,
       showDragHandle: true,
@@ -182,7 +178,9 @@ class _Fila extends StatelessWidget {
     final t = context.tk;
     return ListTile(
       title: Text(
-        (i.source?.trim().isNotEmpty ?? false) ? i.source!.trim() : (i.esSueldo ? 'Sueldo' : 'Ingreso'),
+        (i.source?.trim().isNotEmpty ?? false)
+            ? i.source!.trim()
+            : (i.esSueldo ? 'Sueldo' : 'Ingreso'),
         style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: t.ink),
       ),
       subtitle: Text(subtitulo, style: TextStyle(fontSize: 12.5, color: t.muted)),
@@ -233,9 +231,9 @@ class _FormState extends State<_Form> {
   }
 
   void _set(IncomeDraft d) => setState(() {
-        _d = d;
-        _error = null;
-      });
+    _d = d;
+    _error = null;
+  });
 
   Future<void> _guardar() async {
     setState(() => _intentado = true);

@@ -18,11 +18,13 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 
 import 'data/repositories/auth_repository.dart';
+import 'data/repositories/avisos_repository.dart';
 import 'data/repositories/debt_repository.dart';
 import 'data/repositories/spend_repository.dart';
 import 'data/repositories/tema_repository.dart';
 import 'data/repositories/vehicle_repository.dart';
 import 'data/services/api_client.dart';
+import 'data/services/avisos_service.dart';
 import 'data/services/comprobante.dart';
 import 'data/services/session_store.dart';
 import 'ui/auth/view_model/login_view_model.dart';
@@ -30,6 +32,7 @@ import 'ui/auth/widgets/login_screen.dart';
 import 'ui/core/theme/app_theme.dart';
 import 'ui/core/widgets/cascara.dart';
 import 'ui/core/widgets/marca.dart';
+import 'ui/core/widgets/sincroniza_avisos.dart';
 import 'ui/summary/view_model/summary_view_model.dart';
 import 'ui/summary/widgets/summary_screen.dart';
 
@@ -40,6 +43,7 @@ void main() {
 
   final api = ApiClient();
   final store = SessionStore();
+  final avisos = AvisosService();
 
   runApp(
     MultiProvider(
@@ -48,6 +52,7 @@ void main() {
         // La camara y la galeria: un servicio, no un repositorio, porque no
         // guarda nada — solo traduce lo que da el telefono a lo que pide la API.
         Provider<ComprobanteService>(create: (_) => ComprobanteService()),
+        Provider<AvisosService>.value(value: avisos),
         ChangeNotifierProvider(
           create: (_) => AuthRepository(api: api, store: store),
         ),
@@ -64,6 +69,11 @@ void main() {
         // cuenta, asi que no espera a que nadie entre.
         ChangeNotifierProvider(
           create: (_) => TemaRepository()..restore(),
+        ),
+        // Los recordatorios: la preferencia es del telefono, asi que se lee al
+        // arrancar sin esperar a que nadie entre.
+        ChangeNotifierProvider(
+          create: (_) => AvisosRepository(service: avisos)..restore(),
         ),
       ],
       child: const AppDeudas(),
@@ -83,7 +93,7 @@ class AppDeudas extends StatelessWidget {
       darkTheme: temaOscuro,
       // El que se haya elegido; por defecto, el del telefono.
       themeMode: context.watch<TemaRepository>().modo,
-      home: const Puerta(),
+      home: const SincronizaAvisos(child: Puerta()),
     );
   }
 }
@@ -137,11 +147,9 @@ class _PuertaState extends State<Puerta> {
     }
 
     if (!auth.signedIn) {
-      // Al salir de la sesión no puede quedar nada de la cuenta anterior en
-      // memoria: el siguiente que entre vería datos que no son suyos.
-      context.read<DebtRepository>().clear();
-      context.read<SpendRepository>().clear();
-      context.read<VehicleRepository>().clear();
+      // El vaciado de los repositorios NO va aquí: avisar a quien escucha en
+      // medio de un build es ilegal en Flutter. Se hace al cerrar sesión, que
+      // es el único camino para llegar a este estado (ver ui/core/cerrar_sesion).
       return ChangeNotifierProvider(
         create: (_) => LoginViewModel(auth: auth),
         child: const LoginScreen(),

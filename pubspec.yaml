@@ -29,6 +29,12 @@ dependencies:
   pdf: ^3.11.1
   printing: ^5.13.4           # compartir, guardar o imprimir el PDF
   share_plus: ^10.1.2         # el resumen en texto, para WhatsApp
+  # Los recordatorios. Son notificaciones LOCALES, no push: las fechas de un
+  # acuerdo de pago y de un mantenimiento se saben por adelantado, asi que no
+  # hace falta que un servidor avise — la app las programa y el sistema las
+  # muestra a su hora, sin internet.
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.10.0           # para programarlas en la hora de Nicaragua
 
 dev_dependencies:
   flutter_test:

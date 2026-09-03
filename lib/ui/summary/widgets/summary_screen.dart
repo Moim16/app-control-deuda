@@ -9,6 +9,7 @@ import '../../../domain/models/me.dart';
 import '../../../domain/pago_esperado.dart';
 import '../../core/formato.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/cerrar_sesion.dart';
 import '../../core/vocabulario.dart';
 import '../../core/widgets/comunes.dart';
 import '../../core/widgets/graficos.dart';
@@ -80,6 +81,7 @@ class _SummaryScreenState extends State<SummaryScreen> {
       // en una cuenta vacia.
       floatingActionButton: (me.isOwner && vm.summary != null)
           ? FloatingActionButton.extended(
+              heroTag: 'fab-deudas',
               onPressed: () => nuevaDeuda(context, vm, lado),
               icon: const Icon(Icons.add),
               label: Text(lado.nuevo),
@@ -87,14 +89,14 @@ class _SummaryScreenState extends State<SummaryScreen> {
           : null,
       body: switch (vm.load) {
         _ when vm.load.errorMessage != null && resumen == null => ErrorConReintento(
-            mensaje: vm.load.errorMessage!,
-            onReintentar: vm.load.run,
-          ),
+          mensaje: vm.load.errorMessage!,
+          onReintentar: vm.load.run,
+        ),
         _ when resumen == null => const Center(child: CircularProgressIndicator()),
         _ => RefreshIndicator(
-            onRefresh: vm.refresh.run,
-            child: _Contenido(vm: vm, me: me, lado: lado),
-          ),
+          onRefresh: vm.refresh.run,
+          child: _Contenido(vm: vm, me: me, lado: lado),
+        ),
       },
     );
   }
@@ -168,17 +170,20 @@ class _Contenido extends StatelessWidget {
               : lado.totalTitulo,
           monto: total.balance > 0 ? total.balance : 0,
           moneda: cur,
-          detalle: '${plural(deudas.length, lado.cosa, lado.cosas)} en ${Moneda.de(cur).name}'
+          detalle:
+              '${plural(deudas.length, lado.cosa, lado.cosas)} en ${Moneda.de(cur).name}'
               ' · ${porcentaje(total.paid, total.loaned)}% ${lado.pagadoAdverbio}'
               ' de lo ${lado.loPrestado}',
         ),
 
         const SizedBox(height: 8),
-        Casillas(items: [
-          (lado.prestado, plata(total.loaned, cur), null),
-          (lado.abonado, plata(total.paid, cur), t.ok),
-          (lado.pendiente, plata(total.balance > 0 ? total.balance : 0, cur), t.bad),
-        ]),
+        Casillas(
+          items: [
+            (lado.prestado, plata(total.loaned, cur), null),
+            (lado.abonado, plata(total.paid, cur), t.ok),
+            (lado.pendiente, plata(total.balance > 0 ? total.balance : 0, cur), t.bad),
+          ],
+        ),
 
         if (vm.hayMovimientos) ...[
           const Seccion('Cómo ha ido'),
@@ -206,9 +211,9 @@ class _Contenido extends StatelessWidget {
             debt: d,
             me: me,
             currency: cur,
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => DebtScreen(debtId: d.id)),
-            ),
+            onTap: () =>
+                Navigator.of(context)
+                    .push(MaterialPageRoute(builder: (_) => DebtScreen(debtId: d.id))),
           ),
 
         // Las cerradas no se esconden: una deuda saldada es justo lo que uno
@@ -220,9 +225,9 @@ class _Contenido extends StatelessWidget {
               debt: d,
               me: me,
               currency: d.currencyToShow(cur),
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => DebtScreen(debtId: d.id)),
-              ),
+              onTap: () =>
+                  Navigator.of(context)
+                      .push(MaterialPageRoute(builder: (_) => DebtScreen(debtId: d.id))),
             ),
         ],
 
@@ -244,9 +249,9 @@ class _Contenido extends StatelessWidget {
                       c.text,
                       style: TextStyle(fontSize: 14.5, color: t.ink, height: 1.35),
                     ),
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => DebtScreen(debtId: c.debtId)),
-                    ),
+                    onTap: () =>
+                        Navigator.of(context)
+                            .push(MaterialPageRoute(builder: (_) => DebtScreen(debtId: c.debtId))),
                   ),
                 ],
               ],
@@ -272,9 +277,8 @@ Future<void> nuevaDeuda(BuildContext context, SummaryViewModel vm, Lado lado) as
     // "Debo", dejarla fuera de la vista seria raro.
     vm.showSide(debt.direction);
     aviso(context, '${lado.nuevo} creado. Ahora registra el primer préstamo.');
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => DebtScreen(debtId: debt.id)),
-    );
+    await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => DebtScreen(debtId: debt.id)));
   }
 }
 
@@ -293,9 +297,7 @@ class _Curva extends StatelessWidget {
     if (datos.meses.isEmpty) return const SizedBox.shrink();
 
     final etiquetas = [for (final m in datos.meses) mesCorto('$m-01')];
-    final series = [
-      Serie(nombre: lado.saldoTitulo, color: t.serie[0], valores: datos.saldo),
-    ];
+    final series = [Serie(nombre: lado.saldoTitulo, color: t.serie[0], valores: datos.saldo)];
 
     return Card(
       child: Padding(
@@ -376,7 +378,10 @@ class _FilaPendiente extends StatelessWidget {
     final t = context.tk;
     return ListTile(
       leading: Icon(Icons.event_outlined, size: 20, color: pago.overdue ? t.bad : t.half),
-      title: Text(debt.name, style: TextStyle(fontWeight: FontWeight.w600, color: t.ink)),
+      title: Text(
+        debt.name,
+        style: TextStyle(fontWeight: FontWeight.w600, color: t.ink),
+      ),
       subtitle: Text(
         '${_texto(pago)} · ${fecha(pago.day, conAno: true)}',
         style: TextStyle(color: t.muted, fontSize: 13),
@@ -399,9 +404,9 @@ class _FilaPendiente extends StatelessWidget {
           ],
         ],
       ),
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => DebtScreen(debtId: debt.id)),
-      ),
+      onTap: () =>
+          Navigator.of(context)
+              .push(MaterialPageRoute(builder: (_) => DebtScreen(debtId: debt.id))),
     );
   }
 
@@ -478,9 +483,8 @@ class _BotonCuenta extends StatelessWidget {
               title: const Text('Ajustes'),
               onTap: () {
                 Navigator.of(sheetContext).pop();
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                );
+                Navigator.of(context)
+                    .push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
               },
             ),
             Divider(height: 1, color: t.line),
@@ -489,7 +493,7 @@ class _BotonCuenta extends StatelessWidget {
               title: Text('Cerrar sesión', style: TextStyle(color: t.bad)),
               onTap: () {
                 Navigator.of(sheetContext).pop();
-                context.read<AuthRepository>().signOut();
+                cerrarSesion(context);
               },
             ),
           ],

@@ -72,9 +72,9 @@ class _VehicleBody extends StatelessWidget {
             IconButton(
               icon: const Icon(Icons.checklist_outlined, size: 21),
               tooltip: 'Tareas',
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => TasksScreen(vehiculo: v)),
-              ),
+              onPressed: () =>
+                  Navigator.of(context)
+                      .push(MaterialPageRoute(builder: (_) => TasksScreen(vehiculo: v))),
             ),
             IconButton(
               icon: const Icon(Icons.edit_outlined, size: 21),
@@ -87,20 +87,21 @@ class _VehicleBody extends StatelessWidget {
       floatingActionButton: v == null
           ? null
           : FloatingActionButton.extended(
+              heroTag: 'fab-vehiculo',
               onPressed: () => _nuevoServicio(context, vm, v),
               icon: const Icon(Icons.add),
               label: const Text('Registro'),
             ),
       body: switch (vm.load) {
         _ when vm.load.errorMessage != null && vm.data == null => ErrorConReintento(
-            mensaje: vm.load.errorMessage!,
-            onReintentar: vm.load.run,
-          ),
+          mensaje: vm.load.errorMessage!,
+          onReintentar: vm.load.run,
+        ),
         _ when vm.data == null => const Center(child: CircularProgressIndicator()),
         _ => RefreshIndicator(
-            onRefresh: vm.refresh.run,
-            child: v == null ? const _Arranque() : _Contenido(vm: vm, v: v),
-          ),
+          onRefresh: vm.refresh.run,
+          child: v == null ? const _Arranque() : _Contenido(vm: vm, v: v),
+        ),
       },
     );
   }
@@ -212,22 +213,23 @@ class _Contenido extends StatelessWidget {
           detalle: v.odometer == null
               ? 'Anótalo en el próximo registro y la app puede decirte cuándo toca cada cosa.'
               : 'El más alto anotado · ${plural(v.services, 'registro', 'registros')}'
-                  '${v.lastDay != null ? ' · último ${fecha(v.lastDay)}' : ''}',
+                    '${v.lastDay != null ? ' · último ${fecha(v.lastDay)}' : ''}',
         ),
 
         if (monedas.isNotEmpty) ...[
           const SizedBox(height: 10),
-          Casillas(items: [
-            for (final c in monedas) ('Gastado (${Moneda.de(c).name})', plata(v.spent[c], c), null),
-            if (vm.gastadoEnAccesorios.isNotEmpty)
-              (
-                'En accesorios',
-                vm.gastadoEnAccesorios.entries
-                    .map((e) => plata(e.value, e.key))
-                    .join(' + '),
-                null,
-              ),
-          ]),
+          Casillas(
+            items: [
+              for (final c in monedas)
+                ('Gastado (${Moneda.de(c).name})', plata(v.spent[c], c), null),
+              if (vm.gastadoEnAccesorios.isNotEmpty)
+                (
+                  'En accesorios',
+                  vm.gastadoEnAccesorios.entries.map((e) => plata(e.value, e.key)).join(' + '),
+                  null,
+                ),
+            ],
+          ),
         ],
 
         if (pendientes.isNotEmpty) ...[
@@ -355,18 +357,18 @@ class _FilaTarea extends StatelessWidget {
     final color = st.nunca
         ? t.muted
         : urgente
-            ? t.bad
-            : st.urgencia < 0.25
-                ? t.half
-                : t.ok;
+        ? t.bad
+        : st.urgencia < 0.25
+        ? t.half
+        : t.ok;
 
     return ListTile(
       leading: Icon(
         st.nunca
             ? Icons.help_outline
             : urgente
-                ? Icons.warning_amber_rounded
-                : Icons.check_circle_outline,
+            ? Icons.warning_amber_rounded
+            : Icons.check_circle_outline,
         size: 20,
         color: color,
       ),
@@ -489,10 +491,7 @@ class _FilaServicio extends StatelessWidget {
     final t = context.tk;
     // Las tareas que cubrió: es lo que explica que un solo monto haya tapado
     // tres cosas.
-    final cubre = s.taskIds
-        .map((id) => tareas?.tarea(id)?.name)
-        .whereType<String>()
-        .toList();
+    final cubre = s.taskIds.map((id) => tareas?.tarea(id)?.name).whereType<String>().toList();
 
     return ListTile(
       title: Text(

@@ -29,6 +29,7 @@ class CategoriesScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Categorías')),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'fab-categorias',
         onPressed: () => _abrirForm(context),
         icon: const Icon(Icons.add),
         label: const Text('Categoría'),
@@ -106,16 +107,12 @@ class _Fila extends StatelessWidget {
       ),
       subtitle: Text(
         [
-          c.budget != null
-              ? 'Tope ${plata(c.budget, c.currency)} al mes'
-              : 'Sin tope',
+          c.budget != null ? 'Tope ${plata(c.budget, c.currency)} al mes' : 'Sin tope',
           plural(c.expenses, 'gasto', 'gastos'),
         ].join(' · '),
         style: TextStyle(fontSize: 12.5, color: t.muted),
       ),
-      trailing: c.active
-          ? Icon(Icons.chevron_right, color: t.faint)
-          : const Etiqueta('archivada'),
+      trailing: c.active ? Icon(Icons.chevron_right, color: t.faint) : const Etiqueta('archivada'),
       onTap: onTap,
     );
   }
@@ -131,8 +128,9 @@ class _Form extends StatefulWidget {
 }
 
 class _FormState extends State<_Form> {
-  late CategoryDraft _d =
-      widget.categoria == null ? const CategoryDraft() : CategoryDraft.de(widget.categoria!);
+  late CategoryDraft _d = widget.categoria == null
+      ? const CategoryDraft()
+      : CategoryDraft.de(widget.categoria!);
   late final TextEditingController _nombre = TextEditingController(text: _d.name);
   late final TextEditingController _tope = TextEditingController(text: _d.budget);
 
@@ -150,9 +148,9 @@ class _FormState extends State<_Form> {
   }
 
   void _set(CategoryDraft d) => setState(() {
-        _d = d;
-        _error = null;
-      });
+    _d = d;
+    _error = null;
+  });
 
   Future<void> _guardar() async {
     setState(() => _intentado = true);
@@ -194,8 +192,8 @@ class _FormState extends State<_Form> {
           conGastos
               // Esto es lo que hay que decir: la gente teme perder el historial.
               ? 'Sus ${plural(c.expenses, 'gasto', 'gastos')} NO se borran: quedan '
-                  'como "sin categoría", porque la plata se gastó igual.\n\n'
-                  'Si solo quieres dejar de usarla, archívala con el interruptor.'
+                    'como "sin categoría", porque la plata se gastó igual.\n\n'
+                    'Si solo quieres dejar de usarla, archívala con el interruptor.'
               : 'No tiene gastos, así que no se pierde nada.',
         ),
         actions: [

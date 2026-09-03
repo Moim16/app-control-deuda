@@ -33,6 +33,7 @@ class TasksScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text('Tareas de ${vehiculo.name}')),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'fab-tareas',
         onPressed: () => _abrir(context),
         icon: const Icon(Icons.add),
         label: const Text('Tarea'),
@@ -113,14 +114,9 @@ class _Fila extends StatelessWidget {
       ),
       subtitle: Text(
         intervalos.isEmpty ? 'Sin intervalo: no se puede avisar' : intervalos.join(' · '),
-        style: TextStyle(
-          fontSize: 12.5,
-          color: intervalos.isEmpty ? t.half : t.muted,
-        ),
+        style: TextStyle(fontSize: 12.5, color: intervalos.isEmpty ? t.half : t.muted),
       ),
-      trailing: x.active
-          ? Icon(Icons.chevron_right, color: t.faint)
-          : const Etiqueta('archivada'),
+      trailing: x.active ? Icon(Icons.chevron_right, color: t.faint) : const Etiqueta('archivada'),
       onTap: onTap,
     );
   }
@@ -161,9 +157,9 @@ class _FormState extends State<_Form> {
   }
 
   void _set(TaskDraft d) => setState(() {
-        _d = d;
-        _error = null;
-      });
+    _d = d;
+    _error = null;
+  });
 
   Future<void> _guardar() async {
     setState(() => _intentado = true);
@@ -218,10 +214,7 @@ class _FormState extends State<_Form> {
     if (ok != true || !mounted) return;
 
     setState(() => _guardando = true);
-    final r = await context.read<VehicleRepository>().deleteTask(
-          widget.tarea!.id,
-          conTodo: true,
-        );
+    final r = await context.read<VehicleRepository>().deleteTask(widget.tarea!.id, conTodo: true);
     if (!mounted) return;
     switch (r) {
       case Ok<void>():
@@ -304,7 +297,7 @@ class _FormState extends State<_Form> {
               Text(
                 _d.sinIntervalo
                     ? 'Sin ningún intervalo la tarea se guarda igual, pero la app '
-                        'no puede avisarte cuándo toca.'
+                          'no puede avisarte cuándo toca.'
                     : 'Puedes poner los dos: manda el que llegue primero.',
                 style: TextStyle(
                   fontSize: 12,

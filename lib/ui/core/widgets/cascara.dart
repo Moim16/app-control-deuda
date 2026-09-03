@@ -11,7 +11,9 @@
 // =============================================================================
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../../data/repositories/vehicle_repository.dart';
 import '../../settings/widgets/settings_screen.dart';
 import '../../spend/widgets/spend_screen.dart';
 import '../../summary/widgets/summary_screen.dart';
@@ -26,6 +28,16 @@ class Cascara extends StatefulWidget {
 
 class _CascaraState extends State<Cascara> {
   int _i = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // El vehiculo se pide aunque no se abra su pestaña: sus recordatorios
+    // ("le toca el aceite") hacen falta igual, y son dos docenas de filas.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) context.read<VehicleRepository>().load();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

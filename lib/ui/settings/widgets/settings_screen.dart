@@ -10,11 +10,12 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/repositories/auth_repository.dart';
-import '../../../data/repositories/debt_repository.dart';
+import '../../../data/repositories/avisos_repository.dart';
 import '../../../data/repositories/tema_repository.dart';
 import '../../../utils/result.dart';
 import '../../core/formato.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/cerrar_sesion.dart';
 import '../../core/widgets/comunes.dart';
 import 'users_screen.dart';
 
@@ -84,6 +85,9 @@ class SettingsScreen extends StatelessWidget {
               subtitle: Text(me.fullName ?? me.accountName ?? ''),
             ),
           ),
+
+          const Seccion('Recordatorios'),
+          _Avisos(),
 
           const Seccion('Apariencia'),
           Segmentado<ThemeMode>(
@@ -236,9 +240,102 @@ class SettingsScreen extends StatelessWidget {
       ),
     );
     if (ok != true || !context.mounted) return;
-    // Al salir no puede quedar nada de la cuenta en memoria.
-    context.read<DebtRepository>().clear();
-    await auth.signOut();
+    await cerrarSesion(context);
+  }
+}
+
+/// El interruptor de los recordatorios y a qué hora llegan.
+///
+/// Se dice CUÁNTOS quedaron puestos: prometer avisos y que la persona no sepa
+/// si funcionan es peor que no ofrecerlos.
+class _Avisos extends StatelessWidget {
+  const _Avisos();
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tk;
+    final avisos = context.watch<AvisosRepository>();
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          SwitchListTile(
+            value: avisos.activo,
+            onChanged: (v) async {
+              if (!v) {
+                await avisos.desactivar();
+                return;
+              }
+              final ok = await avisos.activar();
+              if (!ok && context.mounted) {
+                aviso(
+                  context,
+                  'Android no dio permiso para las notificaciones. '
+                  'Se activa desde los ajustes del teléfono.',
+                  malo: true,
+                );
+              }
+            },
+            title: Text(
+              'Avisarme cuándo toca',
+              style: TextStyle(fontSize: 15, color: t.ink),
+            ),
+            subtitle: Text(
+              'Los pagos acordados y lo que le toca al vehículo. Funciona sin '
+              'internet: el teléfono los guarda y los muestra a su hora.',
+              style: TextStyle(fontSize: 12.5, color: t.faint, height: 1.4),
+            ),
+          ),
+          if (avisos.activo) ...[
+            Divider(height: 1, color: t.line),
+            ListTile(
+              leading: Icon(Icons.schedule, color: t.muted),
+              title: const Text('A qué hora'),
+              subtitle: Text(
+                '${avisos.hora.toString().padLeft(2, '0')}:00',
+                style: TextStyle(fontSize: 12.5, color: t.faint),
+              ),
+              trailing: Icon(Icons.chevron_right, color: t.faint),
+              onTap: () async {
+                final h = await showTimePicker(
+                  context: context,
+                  initialTime: TimeOfDay(hour: avisos.hora, minute: 0),
+                  helpText: 'A qué hora avisar',
+                  cancelText: 'Cancelar',
+                  confirmText: 'Listo',
+                  // Solo importa la hora: los minutos no cambian nada y pedirlos
+                  // es una decisión de más.
+                  initialEntryMode: TimePickerEntryMode.dialOnly,
+                );
+                if (h != null) await avisos.cambiarHora(h.hour);
+              },
+            ),
+            Divider(height: 1, color: t.line),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
+              child: Aviso(
+                !avisos.permiso
+                    ? 'Android tiene las notificaciones bloqueadas para esta app. '
+                        'Se permiten desde los ajustes del teléfono.'
+                    : avisos.puestos == 0
+                        ? 'Nada que recordar todavía: los avisos salen de los '
+                            'acuerdos de pago y de las tareas del vehículo.'
+                        : '${plural(avisos.puestos, 'recordatorio puesto', 'recordatorios puestos')}.',
+                tono: !avisos.permiso
+                    ? Tono.malo
+                    : avisos.puestos == 0
+                        ? Tono.normal
+                        : Tono.bueno,
+                icono: !avisos.permiso
+                    ? Icons.notifications_off_outlined
+                    : Icons.notifications_active_outlined,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }
 

@@ -25,12 +25,38 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Vuelve a programar los avisos despues de reiniciar el telefono o de
+             actualizar la app: si no, se pierden sin que nadie se entere. -->
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
+    <!-- Los recordatorios de pago y de mantenimiento son notificaciones LOCALES
+         programadas: la app le dice a Android "muestra esto el 15 a las 8" y el
+         sistema lo hace aunque la app este cerrada.
+
+         POST_NOTIFICATIONS lo exige Android 13+, y se pide en Ajustes cuando la
+         persona activa los avisos, no al arrancar. Sin BOOT_COMPLETED, reiniciar
+         el telefono borraria lo programado. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <!-- El comprobante se puede tomar con la camara, pero la app sirve igual
          sin ella (queda la galeria): "required=false" para que la Play Store no
          la esconda en un dispositivo sin camara. No hace falta el permiso

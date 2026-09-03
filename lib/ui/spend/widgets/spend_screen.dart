@@ -74,36 +74,37 @@ class _SpendBody extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.payments_outlined, size: 21),
             tooltip: 'Ingresos',
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const IncomesScreen()),
-            ),
+            onPressed: () =>
+                Navigator.of(context)
+                    .push(MaterialPageRoute(builder: (_) => const IncomesScreen())),
           ),
           IconButton(
             icon: const Icon(Icons.label_outline, size: 21),
             tooltip: 'Categorías',
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const CategoriesScreen()),
-            ),
+            onPressed: () =>
+                Navigator.of(context)
+                    .push(MaterialPageRoute(builder: (_) => const CategoriesScreen())),
           ),
         ],
       ),
       floatingActionButton: vm.data == null || vm.vacia
           ? null
           : FloatingActionButton.extended(
+              heroTag: 'fab-gastos',
               onPressed: () => _nuevoGasto(context, vm),
               icon: const Icon(Icons.add),
               label: const Text('Gasto'),
             ),
       body: switch (vm.load) {
         _ when vm.load.errorMessage != null && vm.data == null => ErrorConReintento(
-            mensaje: vm.load.errorMessage!,
-            onReintentar: vm.load.run,
-          ),
+          mensaje: vm.load.errorMessage!,
+          onReintentar: vm.load.run,
+        ),
         _ when vm.data == null => const Center(child: CircularProgressIndicator()),
         _ => RefreshIndicator(
-            onRefresh: vm.refresh.run,
-            child: vm.vacia ? _Arranque(vm: vm) : _Contenido(vm: vm),
-          ),
+          onRefresh: vm.refresh.run,
+          child: vm.vacia ? _Arranque(vm: vm) : _Contenido(vm: vm),
+        ),
       },
     );
   }
@@ -152,9 +153,9 @@ class _Arranque extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     OutlinedButton(
-                      onPressed: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const CategoriesScreen()),
-                      ),
+                      onPressed: () =>
+                          Navigator.of(context)
+                              .push(MaterialPageRoute(builder: (_) => const CategoriesScreen())),
                       child: const Text('Crear la mía'),
                     ),
                   ],
@@ -170,11 +171,7 @@ class _Arranque extends StatelessWidget {
   Future<void> _sembrar(BuildContext context) async {
     final r = await context.read<SpendRepository>().seedCategories();
     if (!context.mounted) return;
-    aviso(
-      context,
-      r.isOk ? 'Categorías creadas' : (r as dynamic).message as String,
-      malo: !r.isOk,
-    );
+    aviso(context, r.isOk ? 'Categorías creadas' : (r as dynamic).message as String, malo: !r.isOk);
   }
 }
 
@@ -216,7 +213,7 @@ class _Contenido extends StatelessWidget {
           moneda: cur,
           detalle: vm.tope > 0
               ? 'de ${plata(vm.tope, cur)} que te propusiste · ${vm.porcentajeGastado}%'
-                  '${vm.esMesActual ? ' (va el ${vm.porcentajeMes}% del mes)' : ''}'
+                    '${vm.esMesActual ? ' (va el ${vm.porcentajeMes}% del mes)' : ''}'
               : 'Sin presupuesto puesto todavía',
           abajo: vm.tope > 0
               ? Barra(
@@ -241,11 +238,13 @@ class _Contenido extends StatelessWidget {
         ],
 
         const SizedBox(height: 10),
-        Casillas(items: [
-          ('Entró', plata(ing.total + vm.flujo.recibido, cur), null),
-          ('Gastado', plata(vm.gastado, cur), null),
-          ('Queda', plata(vm.disponible, cur), vm.disponible < 0 ? t.bad : t.ok),
-        ]),
+        Casillas(
+          items: [
+            ('Entró', plata(ing.total + vm.flujo.recibido, cur), null),
+            ('Gastado', plata(vm.gastado, cur), null),
+            ('Queda', plata(vm.disponible, cur), vm.disponible < 0 ? t.bad : t.ok),
+          ],
+        ),
 
         if (!ing.hay) ...[
           const SizedBox(height: 12),
@@ -257,9 +256,9 @@ class _Contenido extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const IncomesScreen()),
-            ),
+            onPressed: () =>
+                Navigator.of(context)
+                    .push(MaterialPageRoute(builder: (_) => const IncomesScreen())),
             icon: const Icon(Icons.add, size: 18),
             label: const Text('Anotar mi ingreso'),
           ),
@@ -418,12 +417,7 @@ class _FilaCategoria extends StatelessWidget {
           const SizedBox(height: 5),
           // La barra se mide contra el tope si lo hay, y si no contra la
           // categoría más gastada: así se compara con algo.
-          Barra(
-            parte: x.total,
-            total: tope ?? maximo,
-            color: pasado ? t.bad : null,
-            alto: 5,
-          ),
+          Barra(parte: x.total, total: tope ?? maximo, color: pasado ? t.bad : null, alto: 5),
           const SizedBox(height: 4),
           Text(
             [
