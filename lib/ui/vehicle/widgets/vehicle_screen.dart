@@ -17,6 +17,7 @@ import '../../../domain/models/vehicle.dart';
 import '../../core/formato.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/comunes.dart';
+import '../../core/widgets/graficos.dart';
 import '../view_model/vehicle_view_model.dart';
 import 'service_form_sheet.dart';
 import 'tasks_screen.dart';
@@ -245,6 +246,7 @@ class _Contenido extends StatelessWidget {
         ],
 
         _Tareas(vm: vm),
+        _Grafico(vm: vm),
         _Historial(vm: vm, v: v),
         _Accesorios(vm: vm, v: v),
       ],
@@ -276,6 +278,63 @@ class _Tareas extends StatelessWidget {
                 _FilaTarea(st: st, urgente: false),
               ],
             ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Lo que se ha gastado en el vehiculo, mes a mes.
+class _Grafico extends StatelessWidget {
+  const _Grafico({required this.vm});
+
+  final VehicleViewModel vm;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tk;
+    final datos = vm.porMes;
+    if (datos.meses.isEmpty || datos.gastado.every((v) => v == 0)) {
+      return const SizedBox.shrink();
+    }
+
+    final etiquetas = [for (final m in datos.meses) mesCorto('$m-01')];
+    final series = [
+      // El naranja, que es el segundo de la paleta: aqui no hay dos series con
+      // las que confundirlo.
+      Serie(nombre: 'Gastado', color: t.serie[1], valores: datos.gastado),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const Seccion('Cuánto se le ha metido'),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Gasto por mes',
+                  style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600, color: t.ink),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Últimos 12 meses · ${Moneda.de(datos.moneda).name}',
+                  style: TextStyle(fontSize: 12.5, color: t.faint),
+                ),
+                const SizedBox(height: 14),
+                Grafico(
+                  series: series,
+                  etiquetas: etiquetas,
+                  moneda: datos.moneda,
+                  forma: FormaGrafico.barras,
+                ),
+                TablaGrafico(etiquetas: etiquetas, series: series, moneda: datos.moneda),
+              ],
+            ),
           ),
         ),
       ],

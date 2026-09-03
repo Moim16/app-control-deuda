@@ -20,6 +20,7 @@ import 'package:provider/provider.dart';
 import 'data/repositories/auth_repository.dart';
 import 'data/repositories/debt_repository.dart';
 import 'data/repositories/spend_repository.dart';
+import 'data/repositories/tema_repository.dart';
 import 'data/repositories/vehicle_repository.dart';
 import 'data/services/api_client.dart';
 import 'data/services/comprobante.dart';
@@ -59,6 +60,11 @@ void main() {
         ChangeNotifierProvider(
           create: (_) => VehicleRepository(api: api),
         ),
+        // El tema se lee al crearlo: es una preferencia del telefono, no de la
+        // cuenta, asi que no espera a que nadie entre.
+        ChangeNotifierProvider(
+          create: (_) => TemaRepository()..restore(),
+        ),
       ],
       child: const AppDeudas(),
     ),
@@ -75,8 +81,8 @@ class AppDeudas extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: temaClaro,
       darkTheme: temaOscuro,
-      // Sigue el tema del teléfono, como la PWA sigue el del sistema.
-      themeMode: ThemeMode.system,
+      // El que se haya elegido; por defecto, el del telefono.
+      themeMode: context.watch<TemaRepository>().modo,
       home: const Puerta(),
     );
   }

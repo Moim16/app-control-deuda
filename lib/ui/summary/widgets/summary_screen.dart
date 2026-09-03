@@ -11,7 +11,9 @@ import '../../core/formato.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/vocabulario.dart';
 import '../../core/widgets/comunes.dart';
+import '../../core/widgets/graficos.dart';
 import '../../debt/widgets/debt_form_sheet.dart';
+import '../../settings/widgets/settings_screen.dart';
 import '../../debt/widgets/debt_screen.dart';
 import '../view_model/summary_view_model.dart';
 import 'debt_card.dart';
@@ -178,6 +180,11 @@ class _Contenido extends StatelessWidget {
           (lado.pendiente, plata(total.balance > 0 ? total.balance : 0, cur), t.bad),
         ]),
 
+        if (vm.hayMovimientos) ...[
+          const Seccion('Cómo ha ido'),
+          _Curva(vm: vm, lado: lado, cur: cur),
+        ],
+
         if (vm.pendientes.isNotEmpty) ...[
           Seccion(lado.tocaTitulo, color: t.bad),
           Card(
@@ -267,6 +274,50 @@ Future<void> nuevaDeuda(BuildContext context, SummaryViewModel vm, Lado lado) as
     aviso(context, '${lado.nuevo} creado. Ahora registra el primer préstamo.');
     await Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => DebtScreen(debtId: debt.id)),
+    );
+  }
+}
+
+/// La curva del saldo total: doce meses, al cierre de cada uno.
+class _Curva extends StatelessWidget {
+  const _Curva({required this.vm, required this.lado, required this.cur});
+
+  final SummaryViewModel vm;
+  final Lado lado;
+  final String cur;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tk;
+    final datos = vm.curva;
+    if (datos.meses.isEmpty) return const SizedBox.shrink();
+
+    final etiquetas = [for (final m in datos.meses) mesCorto('$m-01')];
+    final series = [
+      Serie(nombre: lado.saldoTitulo, color: t.serie[0], valores: datos.saldo),
+    ];
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Cómo ha ido el saldo',
+              style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600, color: t.ink),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              'Últimos 12 meses, al cierre de cada mes · ${Moneda.de(cur).name}',
+              style: TextStyle(fontSize: 12.5, color: t.faint),
+            ),
+            const SizedBox(height: 14),
+            Grafico(series: series, etiquetas: etiquetas, moneda: cur),
+            TablaGrafico(etiquetas: etiquetas, series: series, moneda: cur),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -418,6 +469,19 @@ class _BotonCuenta extends StatelessWidget {
                 ],
               ),
               subtitle: Text(me.fullName ?? me.accountName ?? ''),
+            ),
+            Divider(height: 1, color: t.line),
+            // Quien entra de solo lectura no tiene barra de abajo: este es su
+            // unico camino a los ajustes.
+            ListTile(
+              leading: Icon(Icons.settings_outlined, color: t.muted),
+              title: const Text('Ajustes'),
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                );
+              },
             ),
             Divider(height: 1, color: t.line),
             ListTile(

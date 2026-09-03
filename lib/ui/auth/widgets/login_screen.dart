@@ -7,6 +7,8 @@ import '../../core/theme/app_theme.dart';
 import '../../core/widgets/comunes.dart';
 import '../../core/widgets/marca.dart';
 import '../view_model/login_view_model.dart';
+import 'recover_sheet.dart';
+import 'signup_sheet.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -148,7 +150,19 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 6),
+                  // Sin correo configurado, el codigo de recuperacion es la
+                  // unica forma de volver a entrar: tiene que estar a la vista.
+                  TextButton(
+                    onPressed: cargando
+                        ? null
+                        : () => RecoverSheet.abrir(
+                              context,
+                              usuario: _user.text.trim(),
+                              servidor: _server.text.trim(),
+                            ),
+                    child: const Text('Olvidé mi contraseña'),
+                  ),
                   TextButton(
                     onPressed: vm.toggleServer,
                     child: Text(
@@ -156,6 +170,19 @@ class _LoginScreenState extends State<LoginScreen> {
                       style: TextStyle(color: t.muted, fontSize: 13),
                     ),
                   ),
+                  // Crear una cuenta solo tiene sentido en un servidor propio
+                  // recien puesto; se ofrece junto al campo del servidor, que es
+                  // cuando alguien esta en esa situacion.
+                  if (vm.showServer)
+                    TextButton(
+                      onPressed: cargando
+                          ? null
+                          : () => SignupSheet.abrir(context, servidor: _server.text.trim()),
+                      child: Text(
+                        'Crear una cuenta nueva',
+                        style: TextStyle(color: t.muted, fontSize: 13),
+                      ),
+                    ),
                 ],
               ),
             ),

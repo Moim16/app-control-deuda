@@ -12,6 +12,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../settings/widgets/settings_screen.dart';
 import '../../spend/widgets/spend_screen.dart';
 import '../../summary/widgets/summary_screen.dart';
 import '../../vehicle/widgets/vehicle_screen.dart';
@@ -35,6 +36,7 @@ class _CascaraState extends State<Cascara> {
           SummaryScreen(),
           SpendScreen(),
           VehicleScreen(),
+          SettingsScreen(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -55,6 +57,11 @@ class _CascaraState extends State<Cascara> {
             icon: Icon(Icons.two_wheeler_outlined),
             selectedIcon: Icon(Icons.two_wheeler),
             label: 'Vehículo',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.settings_outlined),
+            selectedIcon: Icon(Icons.settings),
+            label: 'Ajustes',
           ),
         ],
       ),

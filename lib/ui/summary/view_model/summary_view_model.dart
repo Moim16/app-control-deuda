@@ -9,7 +9,10 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../data/repositories/debt_repository.dart';
+import '../../../domain/agregados.dart';
+import '../../../domain/dia.dart';
 import '../../../domain/models/debt.dart';
+import '../../../domain/models/entry.dart';
 import '../../../domain/models/summary.dart';
 import '../../../domain/pago_esperado.dart';
 import '../../../utils/command.dart';
@@ -136,6 +139,33 @@ class SummaryViewModel extends ChangeNotifier {
     }
     out.sort((a, b) => a.$2.daysLeft.compareTo(b.$2.daysLeft));
     return out;
+  }
+
+  /// El saldo total al cierre de cada mes, para la curva del resumen: la
+  /// pregunta es "¿voy bajando?", y solo se contesta mirando el año.
+  ///
+  /// Sale de los movimientos que ya trae el resumen, filtrados por el lado y la
+  /// moneda que se miran: nunca se mezclan.
+  ({List<String> meses, List<double> saldo}) get curva {
+    final s = summary;
+    final cur = _currency;
+    if (s == null || cur == null) return (meses: const [], saldo: const []);
+
+    final ids = s.openOn(_side).map((d) => d.id).toSet();
+    final movs = s.entries
+        .where((e) => e.currency == cur && ids.contains(e.debtId))
+        .toList();
+    final meses = ultimosMeses(12, hoy: s.today);
+    return (meses: meses, saldo: saldoAlCierre(movs, meses));
+  }
+
+  /// Si hay algo que dibujar. Con la cuenta recién empezada, una curva plana en
+  /// cero no dice nada y estorba.
+  bool get hayMovimientos {
+    final s = summary;
+    if (s == null) return false;
+    final ids = s.openOn(_side).map((d) => d.id).toSet();
+    return s.entries.any((Entry e) => e.currency == _currency && ids.contains(e.debtId));
   }
 
   @override

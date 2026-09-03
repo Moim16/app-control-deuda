@@ -96,6 +96,28 @@ class VehicleViewModel extends ChangeNotifier {
     return out;
   }
 
+  /// Lo gastado en el vehiculo por mes, para el grafico. En la moneda con mas
+  /// gasto: mezclar cordobas y dolares en una barra seria inventar un total.
+  ({List<String> meses, List<double> gastado, String moneda}) get porMes {
+    final v = vehiculo;
+    final d = data;
+    final cur = monedasGastadas.isEmpty ? 'NIO' : monedasGastadas.first;
+    if (v == null || d == null) return (meses: const [], gastado: const [], moneda: cur);
+
+    final meses = ultimosMeses(12, hoy: hoy);
+    final servicios = d.serviciosDe(v.id).where((s) => s.currency == cur).toList();
+    return (
+      meses: meses,
+      gastado: [
+        for (final m in meses)
+          servicios
+              .where((s) => mesDe(s.day) == m)
+              .fold<double>(0, (a, s) => a + (s.cost ?? 0)),
+      ],
+      moneda: cur,
+    );
+  }
+
   void mostrar(int vehicleId) {
     if (_vehId == vehicleId) return;
     _vehId = vehicleId;

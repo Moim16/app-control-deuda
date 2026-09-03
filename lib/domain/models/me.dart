@@ -35,3 +35,50 @@ class Me {
         accountName: account?['name'] as String?,
       );
 }
+
+/// Un usuario de la cuenta, como lo ve el dueño en la pantalla de accesos.
+class Usuario {
+  const Usuario({
+    required this.id,
+    required this.name,
+    this.fullName,
+    required this.role,
+    required this.active,
+    required this.debtIds,
+  });
+
+  final int id;
+  final String name;
+  final String? fullName;
+  final String role;
+  final bool active;
+
+  /// Las deudas que tiene asignadas. Un `viewer` sin ninguna no ve NADA: no es
+  /// un error, es lo que significa no haberle compartido todavía.
+  final List<int> debtIds;
+
+  bool get isOwner => role == 'admin';
+
+  factory Usuario.fromJson(Map<String, dynamic> j) => Usuario(
+        id: j['id'] as int,
+        name: j['name'] as String,
+        fullName: j['fullName'] as String?,
+        role: (j['role'] as String?) ?? 'viewer',
+        active: (j['active'] as int? ?? 1) == 1,
+        debtIds: ((j['debtIds'] as List?) ?? const []).map((x) => x as int).toList(),
+      );
+}
+
+/// El código de recuperación: si hay uno y de cuándo es. El código en sí solo
+/// se ve UNA vez, al generarlo.
+class Recuperacion {
+  const Recuperacion({required this.tiene, this.desde});
+
+  final bool tiene;
+  final String? desde;
+
+  factory Recuperacion.fromJson(Map<String, dynamic>? j) => Recuperacion(
+        tiene: (j?['has'] as bool?) ?? false,
+        desde: j?['at'] as String?,
+      );
+}

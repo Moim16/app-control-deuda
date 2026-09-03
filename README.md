@@ -49,8 +49,29 @@ Flutter SDK, JDK 17 y el Android SDK (`platform-tools`, `platforms;android-36`, 
 
 ## Qué hay hecho y qué falta
 
+**La app hace todo lo que hace la web.** Mismos módulos, misma API, mismas reglas.
+
 | | |
 |---|---|
+| ✅ | Entrar, con la sesión guardada y la dirección del servidor configurable |
+| ✅ | Recuperar la contraseña con el código, y crear una cuenta nueva |
+| ✅ | Resumen: *Debo* / *Me deben*, totales por moneda, lo que toca y la curva del año |
+| ✅ | Deudas: crear, editar, cerrar, borrar, con su acuerdo de pago |
+| ✅ | Movimientos: registrar, corregir y borrar, con comprobante |
+| ✅ | Comentarios de la deuda y de cada movimiento |
+| ✅ | Gráficos de la deuda y simulador con hasta 3 escenarios |
+| ✅ | Estado de cuenta en PDF y resumen para WhatsApp |
+| ✅ | Gastos del hogar: presupuesto, categorías, detalle por categoría, captura |
+| ✅ | Ingresos y capacidad de pago, conectada al simulador |
+| ✅ | Vehículo: cuándo le toca cada cosa, mantenimientos y accesorios |
+| ✅ | Usuarios: crear el de solo lectura, asignarle deudas, activarlo o no |
+| ✅ | Ajustes: nombre de la cuenta, tema, contraseña, código de recuperación |
+| ⬜ | Notificaciones push — lo único que la web no puede hacer |
+| ⬜ | Publicar en la Play Store |
+
+Lo que la app **no** tiene y la web sí: instalar la PWA (aquí no aplica). Y al revés, la app tiene el tema guardado en el teléfono.
+
+---|---|
 | ✅ | Entrar, con la sesión guardada y la dirección del servidor configurable |
 | ✅ | Resumen: pestañas *Debo* / *Me deben*, totales por moneda, lo que toca pagar |
 | ✅ | Ficha de una deuda: saldo, movimientos con su saldo corrido, comprobantes |

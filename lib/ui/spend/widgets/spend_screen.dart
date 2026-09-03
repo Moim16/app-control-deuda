@@ -22,6 +22,7 @@ import '../../core/widgets/comunes.dart';
 import '../../core/widgets/graficos.dart';
 import '../view_model/spend_view_model.dart';
 import 'categories_screen.dart';
+import 'category_detail_sheet.dart';
 import 'expense_form_sheet.dart';
 import 'incomes_screen.dart';
 
@@ -356,7 +357,16 @@ class _PorCategoria extends StatelessWidget {
             children: [
               for (final (i, x) in lista.indexed) ...[
                 if (i > 0) Divider(height: 1, color: t.line),
-                _FilaCategoria(x: x, maximo: maximo, moneda: vm.moneda),
+                InkWell(
+                  onTap: () => CategoryDetailSheet.abrir(
+                    context,
+                    categoria: x.categoria,
+                    mes: vm.mes,
+                    moneda: vm.moneda,
+                    hoy: vm.hoy,
+                  ),
+                  child: _FilaCategoria(x: x, maximo: maximo, moneda: vm.moneda),
+                ),
               ],
             ],
           ),
