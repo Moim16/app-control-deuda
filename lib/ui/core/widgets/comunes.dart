@@ -146,14 +146,21 @@ class MontoGrande extends StatelessWidget {
     super.key,
     required this.titulo,
     required this.monto,
-    required this.moneda,
+    this.moneda,
+    this.unidad,
     this.detalle,
     this.abajo,
   });
 
   final String titulo;
-  final double monto;
-  final String moneda;
+  final num? monto;
+
+  /// La moneda, si el número es plata. null cuando no lo es (el kilometraje de
+  /// un vehiculo no lleva simbolo de cordobas).
+  final String? moneda;
+
+  /// Lo que va detras del numero cuando no es plata: "km".
+  final String? unidad;
   final String? detalle;
   final Widget? abajo;
 
@@ -180,13 +187,17 @@ class MontoGrande extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.baseline,
               textBaseline: TextBaseline.alphabetic,
               children: [
+                if (moneda != null) ...[
+                  Text(
+                    Moneda.de(moneda!).symbol,
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: t.muted),
+                  ),
+                  const SizedBox(width: 4),
+                ],
                 Text(
-                  Moneda.de(moneda).symbol,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: t.muted),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  soloNumero(monto),
+                  // Sin dato se pone una raya, no un cero: "0 km" es una
+                  // afirmacion y "—" es lo que de verdad se sabe.
+                  monto == null ? '—' : soloNumero(monto),
                   style: TextStyle(
                     fontSize: 40,
                     fontWeight: FontWeight.w600,
@@ -195,6 +206,13 @@ class MontoGrande extends StatelessWidget {
                     color: t.ink,
                   ),
                 ),
+                if (unidad != null && monto != null) ...[
+                  const SizedBox(width: 5),
+                  Text(
+                    unidad!,
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500, color: t.muted),
+                  ),
+                ],
               ],
             ),
             if (detalle != null) ...[

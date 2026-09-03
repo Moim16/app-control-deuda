@@ -31,7 +31,7 @@ El `API_URL` es opcional: si no se pasa, la app pide la dirección del servidor 
 
 ```bash
 flutter analyze     # sin avisos
-flutter test        # 161 pruebas
+flutter test        # 204 pruebas
 flutter build apk   # el APK para instalar
 ```
 
@@ -65,7 +65,7 @@ Flutter SDK, JDK 17 y el Android SDK (`platform-tools`, `platforms;android-36`, 
 | ✅ | Estado de cuenta en PDF y resumen para WhatsApp |
 | ✅ | Gastos del hogar: presupuesto, categorías y captura del recibo |
 | ✅ | Ingresos y capacidad de pago, conectada al simulador |
-| ⬜ | Vehículo: mantenimientos y accesorios |
+| ✅ | Vehículo: cuándo le toca cada cosa, mantenimientos y accesorios |
 | ⬜ | Usuarios: crear el de solo lectura y asignarle deudas |
 | ⬜ | Notificaciones push — la razón principal de tener app nativa |
 | ⬜ | Publicar en la Play Store |
@@ -83,6 +83,8 @@ La única cuenta que hace la app es la del **próximo pago** de un acuerdo, porq
 **La misma deuda se lee al revés según quién mire.** El dueño ve *"le debo C$3,500"*; su hermano, que es el acreedor, ve *"me deben C$3,500"*. Todo ese vocabulario vive en `ui/core/vocabulario.dart`, igual que la constante `SIDE` de la web.
 
 **El separador de miles se fija a mano.** Los datos de `es_NI` que trae `intl` usan el punto para los miles (`C$3.500`); en Nicaragua se escribe con coma (`C$3,500.50`), que es lo que ya muestra la web. Las dos apps tienen que decir lo mismo.
+
+**Un mantenimiento es un registro que cubre varias tareas.** En la casa comercial le hacen a la moto aceite, filtro y cadena, y uno paga un solo monto. Anotar tres servicios sería inventarse tres gastos, así que se anota uno y se marcan las tres tareas: las tres quedan al día. Y para saber cuándo se hizo cada una no se mira un campo del servicio, sino la lista de tareas que ese servicio cubrió.
 
 **El PDF sí usa una librería, y el resto no.** La web escribe el PDF byte a byte, con su propia tabla de anchos de Helvetica, porque no podía traer dependencias. Aquí no hay esa limitante: reescribir un generador de PDF a mano sería trabajo de más para un resultado peor, así que el estado de cuenta usa `pdf` + `printing`. Los gráficos, en cambio, siguen dibujados a mano — ahí el problema no era la dependencia sino el criterio visual.
 

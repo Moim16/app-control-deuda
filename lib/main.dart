@@ -20,6 +20,7 @@ import 'package:provider/provider.dart';
 import 'data/repositories/auth_repository.dart';
 import 'data/repositories/debt_repository.dart';
 import 'data/repositories/spend_repository.dart';
+import 'data/repositories/vehicle_repository.dart';
 import 'data/services/api_client.dart';
 import 'data/services/comprobante.dart';
 import 'data/services/session_store.dart';
@@ -54,6 +55,9 @@ void main() {
         ),
         ChangeNotifierProvider(
           create: (_) => SpendRepository(api: api),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => VehicleRepository(api: api),
         ),
       ],
       child: const AppDeudas(),
@@ -131,6 +135,7 @@ class _PuertaState extends State<Puerta> {
       // memoria: el siguiente que entre vería datos que no son suyos.
       context.read<DebtRepository>().clear();
       context.read<SpendRepository>().clear();
+      context.read<VehicleRepository>().clear();
       return ChangeNotifierProvider(
         create: (_) => LoginViewModel(auth: auth),
         child: const LoginScreen(),

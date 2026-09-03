@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 
 import '../../spend/widgets/spend_screen.dart';
 import '../../summary/widgets/summary_screen.dart';
+import '../../vehicle/widgets/vehicle_screen.dart';
 
 class Cascara extends StatefulWidget {
   const Cascara({super.key});
@@ -33,6 +34,7 @@ class _CascaraState extends State<Cascara> {
         children: const [
           SummaryScreen(),
           SpendScreen(),
+          VehicleScreen(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -48,6 +50,11 @@ class _CascaraState extends State<Cascara> {
             icon: Icon(Icons.shopping_cart_outlined),
             selectedIcon: Icon(Icons.shopping_cart),
             label: 'Gastos',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.two_wheeler_outlined),
+            selectedIcon: Icon(Icons.two_wheeler),
+            label: 'Vehículo',
           ),
         ],
       ),
