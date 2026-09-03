@@ -206,7 +206,9 @@ writeFileSync(
   join(values, 'ic_launcher_background.xml'),
   `<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- El mismo --ink de la app. -->
+    <!-- El mismo negro que el token \`ink\` de la app. (Ojo: un comentario
+         XML no admite dos guiones seguidos, asi que no se puede escribir el
+         nombre de la variable CSS tal cual.) -->
     <color name="ic_launcher_background">#18181B</color>
 </resources>
 `,
