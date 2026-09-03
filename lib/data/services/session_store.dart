@@ -11,10 +11,12 @@ class SessionStore {
   static const _tokenKey = 'dd_token';
   static const _urlKey = 'dd_url';
 
-  /// La direccion con la que se compilo, si se paso
-  /// (`--dart-define=API_URL=https://...`). Sirve para que la app instalada ya
-  /// venga apuntando a produccion.
-  static const compiledUrl = String.fromEnvironment('API_URL', defaultValue: '');
+  /// Donde vive la API en produccion. Se puede sobreescribir al compilar
+  /// (`--dart-define=API_URL=http://192.168.x.x:3000`) para apuntar a la
+  /// maquina de desarrollo, y tambien desde la pantalla de entrada.
+  static const produccion = 'https://control-deuda.vercel.app';
+
+  static const compiledUrl = String.fromEnvironment('API_URL', defaultValue: produccion);
 
   Future<SharedPreferences> get _prefs => SharedPreferences.getInstance();
 
