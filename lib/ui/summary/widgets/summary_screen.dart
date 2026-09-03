@@ -11,6 +11,7 @@ import '../../core/formato.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/vocabulario.dart';
 import '../../core/widgets/comunes.dart';
+import '../../debt/widgets/debt_form_sheet.dart';
 import '../../debt/widgets/debt_screen.dart';
 import '../view_model/summary_view_model.dart';
 import 'debt_card.dart';
@@ -73,6 +74,15 @@ class _SummaryScreenState extends State<SummaryScreen> {
           ),
         ],
       ),
+      // Crear una deuda es del dueño, y es lo primero que hay que poder hacer
+      // en una cuenta vacia.
+      floatingActionButton: (me.isOwner && vm.summary != null)
+          ? FloatingActionButton.extended(
+              onPressed: () => nuevaDeuda(context, vm, lado),
+              icon: const Icon(Icons.add),
+              label: Text(lado.nuevo),
+            )
+          : null,
       body: switch (vm.load) {
         _ when vm.load.errorMessage != null && resumen == null => ErrorConReintento(
             mensaje: vm.load.errorMessage!,
@@ -113,6 +123,13 @@ class _Contenido extends StatelessWidget {
                   ? lado.vacio
                   : 'Todavía no te compartieron ninguna ${lado.cosa}.\nCuando lo hagan, aparecerá aquí.',
               icono: me.isOwner ? Icons.account_balance_wallet_outlined : Icons.visibility_outlined,
+              accion: me.isOwner
+                  ? FilledButton.icon(
+                      onPressed: () => nuevaDeuda(context, vm, lado),
+                      icon: const Icon(Icons.add, size: 18),
+                      label: Text(lado.nuevo),
+                    )
+                  : null,
             ),
           ),
         ],
@@ -187,6 +204,21 @@ class _Contenido extends StatelessWidget {
             ),
           ),
 
+        // Las cerradas no se esconden: una deuda saldada es justo lo que uno
+        // quiere poder mirar despues, y desde ahi se reabre si hizo falta.
+        if (vm.closed.isNotEmpty) ...[
+          Seccion('${lado.cosas.substring(0, 1).toUpperCase()}${lado.cosas.substring(1)} cerradas'),
+          for (final d in vm.closed)
+            DebtCard(
+              debt: d,
+              me: me,
+              currency: d.currencyToShow(cur),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => DebtScreen(debtId: d.id)),
+              ),
+            ),
+        ],
+
         if (vm.summary!.comments.isNotEmpty) ...[
           const Seccion('Últimos comentarios'),
           Card(
@@ -215,6 +247,26 @@ class _Contenido extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// Abre el formulario de una deuda nueva y, si se creo, entra en ella: lo
+/// unico que tiene sentido hacer despues es registrar el primer prestamo.
+Future<void> nuevaDeuda(BuildContext context, SummaryViewModel vm, Lado lado) async {
+  final hoy = vm.summary?.today;
+  if (hoy == null) return;
+
+  final r = await DebtFormSheet.abrir(context, hoy: hoy, direccion: vm.side);
+  if (!context.mounted) return;
+
+  if (r case DeudaCreada(:final debt)) {
+    // El lado se mueve al de la deuda creada: si se creo un cobro estando en
+    // "Debo", dejarla fuera de la vista seria raro.
+    vm.showSide(debt.direction);
+    aviso(context, '${lado.nuevo} creado. Ahora registra el primer préstamo.');
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => DebtScreen(debtId: debt.id)),
     );
   }
 }

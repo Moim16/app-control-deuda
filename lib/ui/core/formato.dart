@@ -100,3 +100,10 @@ String hoyLocal() {
 
 /// "3 días" / "1 día": el plural bien hecho, que aparece por todas partes.
 String plural(int n, String uno, String varios) => '$n ${n == 1 ? uno : varios}';
+
+/// "sept 26", para el eje de un gráfico donde no cabe el mes entero.
+String mesCorto(String? day) {
+  final d = DateTime.tryParse(day ?? '');
+  if (d == null) return '—';
+  return DateFormat('MMM yy', 'es').format(d).replaceAll('.', '');
+}

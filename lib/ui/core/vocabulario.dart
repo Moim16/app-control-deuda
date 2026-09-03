@@ -44,6 +44,15 @@ class Lado {
     required this.ayudaAbono,
     required this.pistaMotivoPrestamo,
     required this.pistaMotivoAbono,
+    required this.quien,
+    required this.pistaQuien,
+    required this.otro,
+    required this.pistaOtro,
+    required this.ayudaNueva,
+    required this.acuerdo,
+    required this.ayudaAcuerdo,
+    required this.abierta,
+    required this.crear,
   });
 
   /// "Debo" · "Me deben"
@@ -110,6 +119,29 @@ class Lado {
   final String pistaMotivoPrestamo;
   final String pistaMotivoAbono;
 
+  /* --------------------------------- el formulario de la deuda misma ------- */
+
+  /// "¿Con quién es la deuda?" · "¿Quién me debe?"
+  final String quien;
+  final String pistaQuien;
+
+  /// "Nombre de la persona o banco (opcional)" · "Nombre completo o contacto"
+  final String otro;
+  final String pistaOtro;
+
+  /// Lo que explica que aqui NO se pide el monto.
+  final String ayudaNueva;
+
+  /// "Acuerdo de pago" · "Acuerdo de cobro"
+  final String acuerdo;
+  final String ayudaAcuerdo;
+
+  /// "Deuda abierta" · "Cobro abierto"
+  final String abierta;
+
+  /// Lo que dice el boton que la crea.
+  final String crear;
+
   static const debo = Lado(
     tab: 'Debo',
     cosa: 'deuda',
@@ -138,6 +170,18 @@ class Lado {
     ayudaAbono: 'Un pago tuyo: baja lo que debes.',
     pistaMotivoPrestamo: 'Para la moto, universidad, emergencia…',
     pistaMotivoAbono: 'Abono de marzo, transferencia…',
+    quien: '¿Con quién es la deuda?',
+    pistaQuien: 'Mi hermano, Tarjeta Amex…',
+    otro: 'Nombre de la persona o banco (opcional)',
+    pistaOtro: 'Juan, Banco LAFISE…',
+    ayudaNueva: 'Aquí solo dices con quién es la deuda. No necesitas saber el '
+        'monto: se va sumando solo con cada préstamo que registres dentro, y '
+        'baja con cada abono.',
+    acuerdo: 'Acuerdo de pago',
+    ayudaAcuerdo: 'Si quedaste en abonar cada tanto, ponlo aquí y la app te '
+        'avisa cuándo toca.',
+    abierta: 'Deuda abierta',
+    crear: 'Crear la deuda',
   );
 
   static const meDeben = Lado(
@@ -168,6 +212,18 @@ class Lado {
     ayudaAbono: 'Un pago que recibiste: baja lo que te deben.',
     pistaMotivoPrestamo: 'Para la moto, universidad, emergencia…',
     pistaMotivoAbono: 'Pago de marzo, me transfirió…',
+    quien: '¿Quién me debe?',
+    pistaQuien: 'Mi primo Carlos, don Luis…',
+    otro: 'Nombre completo o dato de contacto (opcional)',
+    pistaOtro: 'Carlos Martínez, 8888-8888…',
+    ayudaNueva: 'Aquí solo dices quién te debe. No necesitas saber el monto: se '
+        'va sumando con cada préstamo que registres, y baja con cada pago que '
+        'recibas.',
+    acuerdo: 'Acuerdo de cobro',
+    ayudaAcuerdo: 'Si quedaron en que te pague cada tanto, ponlo aquí y la app '
+        'te avisa cuándo toca.',
+    abierta: 'Cobro abierto',
+    crear: 'Registrar el cobro',
   );
 }
 

@@ -4,6 +4,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../data/repositories/debt_repository.dart';
+import '../../../domain/dia.dart';
 import '../../../domain/models/comment.dart';
 import '../../../domain/models/debt.dart';
 import '../../../domain/models/entry.dart';
@@ -12,7 +13,7 @@ import '../../../utils/command.dart';
 import '../../../utils/result.dart';
 
 /// Qué se está viendo de la deuda.
-enum DebtTab { movimientos, comentarios }
+enum DebtTab { movimientos, graficos, comentarios }
 
 /// El filtro de la lista de movimientos.
 enum EntryFilter { todos, prestamos, abonos }
@@ -21,7 +22,6 @@ class DebtViewModel extends ChangeNotifier {
   DebtViewModel({required DebtRepository debts, required this.debtId}) : _debts = debts {
     load = Command0<List<Entry>>(_load);
     reload = Command0<List<Entry>>(() => _load(force: true));
-    comment = Command1<Comment, String>(_comment);
     _debts.addListener(notifyListeners);
   }
 
@@ -30,7 +30,6 @@ class DebtViewModel extends ChangeNotifier {
 
   late final Command0<List<Entry>> load;
   late final Command0<List<Entry>> reload;
-  late final Command1<Comment, String> comment;
 
   List<Entry> _entries = const [];
   List<Entry> get allEntries => _entries;
@@ -73,7 +72,23 @@ class DebtViewModel extends ChangeNotifier {
     return r;
   }
 
-  Future<Result<Comment>> _comment(String texto) async {
+  /* -------------------------------- el hilo de UN movimiento -------------- */
+
+  /// Los comentarios de un movimiento. Se piden al abrir su detalle y no con la
+  /// lista: son de ese movimiento y casi nunca se miran todos.
+  Future<Result<List<Comment>>> commentsOf(int entryId) =>
+      _debts.comments(debtId, entryId: entryId);
+
+  /// Escribe en el hilo de un movimiento. Al volver se recarga todo: el
+  /// contador que se ve en la fila del movimiento tiene que subir.
+  Future<Result<Comment>> commentOn(int entryId, String texto) async {
+    final r = await _debts.addComment(debtId, texto, entryId: entryId);
+    if (r.isOk) await _load(force: true);
+    return r;
+  }
+
+  /// Escribe en el hilo de la deuda en general.
+  Future<Result<Comment>> comentar(String texto) async {
     final r = await _debts.addComment(debtId, texto);
     if (r case Ok<Comment>(:final value)) {
       _comments = [..._comments, value];
@@ -82,12 +97,13 @@ class DebtViewModel extends ChangeNotifier {
     return r;
   }
 
-  Future<void> deleteComment(int id) async {
+  /// Borra un comentario, sea de la deuda o de un movimiento. Se recarga en vez
+  /// de quitarlo de la lista a mano: si era de un movimiento, tambien cambia su
+  /// contador.
+  Future<Result<void>> borrarComentario(int id) async {
     final r = await _debts.deleteComment(id, debtId: debtId);
-    if (r.isOk) {
-      _comments = _comments.where((c) => c.id != id).toList();
-      notifyListeners();
-    }
+    if (r.isOk) await _load(force: true);
+    return r;
   }
 
   /// Borra un movimiento. El saldo lo recalcula el servidor; aqui solo se tira
@@ -146,12 +162,20 @@ class DebtViewModel extends ChangeNotifier {
 
   Future<Result<String>> receipt(int entryId) => _debts.receipt(entryId);
 
+  /* -------------------------------------------------------------- graficos -- */
+
+  /// Los meses del grafico: los ultimos doce, acabando en el de hoy.
+  List<String> get meses => ultimosMeses(12, hoy: hoy ?? '');
+
+  /// Los movimientos de la moneda que se esta mirando. No se mezclan monedas
+  /// en un grafico: dos monedas son dos graficos.
+  List<Entry> get deLaMoneda => _entries.where((e) => e.currency == currency).toList();
+
   @override
   void dispose() {
     _debts.removeListener(notifyListeners);
     load.dispose();
     reload.dispose();
-    comment.dispose();
     super.dispose();
   }
 }

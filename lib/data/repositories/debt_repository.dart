@@ -13,6 +13,8 @@
 import 'package:flutter/foundation.dart';
 
 import '../../domain/models/comment.dart';
+import '../../domain/models/debt.dart';
+import '../../domain/models/debt_draft.dart';
 import '../../domain/models/entry.dart';
 import '../../domain/models/entry_draft.dart';
 import '../../domain/models/summary.dart';
@@ -36,7 +38,10 @@ class DebtRepository extends ChangeNotifier {
     if (_summary != null && !force) return Ok(_summary!);
     return Result.guard<AccountSummary>(
       () async {
-        _summary = AccountSummary.fromJson(await _api.get('/api/summary'));
+        // `all=1` trae tambien las cerradas: la app tiene que poder verlas y
+        // reabrirlas, no solo las abiertas. Son pocas y vienen en la misma
+        // llamada, asi que no cuesta nada.
+        _summary = AccountSummary.fromJson(await _api.get('/api/summary?all=1'));
         notifyListeners();
         return _summary!;
       },
@@ -44,6 +49,57 @@ class DebtRepository extends ChangeNotifier {
       esSesionVencida: _vencida,
     );
   }
+
+  /* ---------------------------------------------------------------- deudas -- */
+
+  /// Crea la deuda y devuelve la nueva, para poder abrirla enseguida.
+  ///
+  /// Aqui NO se pide monto: una deuda nace con un nombre y se va llenando de
+  /// prestamos. El saldo lo calcula el servidor a partir de ellos.
+  Future<Result<Debt>> createDebt(DebtDraft d) => Result.guard<Debt>(
+        () async {
+          final j = await _api.post('/api/debts', d.aJson(nueva: true));
+          final debt = Debt.fromJson(j['debt'] as Map<String, dynamic>);
+          await loadSummary(force: true);
+          return debt;
+        },
+        alMensaje: _mensaje,
+        esSesionVencida: _vencida,
+      );
+
+  Future<Result<void>> updateDebt(int debtId, DebtDraft d) => Result.guard<void>(
+        () async {
+          await _api.put('/api/debts?id=$debtId', d.aJson(nueva: false));
+          _invalidate(debtId);
+          await loadSummary(force: true);
+        },
+        alMensaje: _mensaje,
+        esSesionVencida: _vencida,
+      );
+
+  /// Cierra o reabre la deuda. Cerrar no borra nada: la saca de la lista de
+  /// abiertas y ahi queda su historial.
+  Future<Result<void>> setDebtActive(int debtId, {required bool active}) =>
+      Result.guard<void>(
+        () async {
+          await _api.put('/api/debts?id=$debtId', {'active': active});
+          await loadSummary(force: true);
+        },
+        alMensaje: _mensaje,
+        esSesionVencida: _vencida,
+      );
+
+  /// Borra la deuda con todo su historial. Sin vuelta atras: quien solo quiere
+  /// dejar de verla, la cierra.
+  Future<Result<void>> deleteDebt(int debtId) => Result.guard<void>(
+        () async {
+          await _api.delete('/api/debts?id=$debtId&hard=1');
+          _entries.remove(debtId);
+          await loadSummary(force: true);
+        },
+        alMensaje: _mensaje,
+        esSesionVencida: _vencida,
+      );
 
   /* ---------------------------------------------------------- movimientos -- */
 

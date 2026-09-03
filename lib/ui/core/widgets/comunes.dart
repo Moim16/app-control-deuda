@@ -7,6 +7,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../domain/dia.dart';
 import '../formato.dart';
 import '../theme/app_theme.dart';
 
@@ -218,52 +219,58 @@ class Casillas extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.tk;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (final (i, item) in items.indexed) ...[
-          if (i > 0) const SizedBox(width: 8),
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
-              decoration: BoxDecoration(
-                color: t.card,
-                border: Border.all(color: t.line),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.$1.toUpperCase(),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.7,
-                      color: t.faint,
+    // `IntrinsicHeight` no es adorno: sin el, `stretch` dentro de una lista
+    // (donde la altura no esta acotada) le pasa altura INFINITA a las casillas y
+    // el layout revienta. Con esto se mide primero cuanto necesita la mas alta y
+    // se les da esa altura a las tres, que es lo que se buscaba: que queden
+    // parejas aunque una traiga un monto de dos lineas.
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 8,
+        children: [
+          for (final item in items)
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
+                decoration: BoxDecoration(
+                  color: t.card,
+                  border: Border.all(color: t.line),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.$1.toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.7,
+                        color: t.faint,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    item.$2,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 16.5,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -0.3,
-                      color: item.$3 ?? t.ink,
-                      fontFeatures: const [FontFeature.tabularFigures()],
+                    const SizedBox(height: 3),
+                    Text(
+                      item.$2,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 16.5,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.3,
+                        color: item.$3 ?? t.ink,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
         ],
-      ],
+      ),
     );
   }
 }
@@ -386,4 +393,159 @@ void aviso(BuildContext context, String texto, {bool malo = false}) {
         duration: Duration(seconds: malo ? 4 : 2),
       ),
     );
+}
+
+/* ======================================================= piezas de formulario */
+
+/// Dos o tres botones pegados, uno elegido. El equivalente del `.seg` de la
+/// web: para elegir entre pocas cosas sin desplegar un menú.
+///
+/// Es genérico porque lo usan cosas distintas (préstamo/abono, yo debo/me
+/// deben) y lo que cambia es solo el valor que representa cada botón.
+class Segmentado<T> extends StatelessWidget {
+  const Segmentado({
+    super.key,
+    required this.opciones,
+    required this.elegida,
+    required this.onElegir,
+  });
+
+  /// Valor, texto, icono y de qué color va cuando está elegido (null = tinta).
+  final List<(T, String, IconData, Color?)> opciones;
+  final T elegida;
+  final ValueChanged<T> onElegir;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tk;
+    return Container(
+      decoration: BoxDecoration(
+        color: t.soft,
+        borderRadius: BorderRadius.circular(9),
+        border: Border.all(color: t.line),
+      ),
+      padding: const EdgeInsets.all(3),
+      child: Row(
+        children: [
+          for (final (valor, texto, icono, color) in opciones)
+            Expanded(
+              child: InkWell(
+                onTap: () => onElegir(valor),
+                borderRadius: BorderRadius.circular(7),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
+                  decoration: BoxDecoration(
+                    color: valor == elegida ? t.card : Colors.transparent,
+                    borderRadius: BorderRadius.circular(7),
+                    border: Border.all(
+                      color: valor == elegida ? t.line2 : Colors.transparent,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        icono,
+                        size: 16,
+                        color: valor == elegida ? (color ?? t.ink) : t.faint,
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          texto,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: valor == elegida ? FontWeight.w700 : FontWeight.w500,
+                            color: valor == elegida ? t.ink : t.muted,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// El campo de una fecha: se toca y se elige en el calendario.
+///
+/// No se escribe a mano a propósito — un campo de texto con formato es la forma
+/// más fácil de meter una fecha que no existe — y por eso la validación de
+/// `dia.dart` es una red y no la puerta principal.
+class CampoFecha extends StatelessWidget {
+  const CampoFecha({
+    super.key,
+    required this.etiqueta,
+    required this.dia,
+    required this.onCambiar,
+    this.hoy,
+    this.desdeAnos = 10,
+    this.hastaDias = 1,
+    this.ayuda = 'Elige la fecha',
+  });
+
+  final String etiqueta;
+
+  /// YYYY-MM-DD.
+  final String dia;
+  final ValueChanged<String> onCambiar;
+
+  /// Hoy según el SERVIDOR. Marca el tope y, si el día es este, se dice "Hoy".
+  final String? hoy;
+
+  /// Cuántos años atrás se puede elegir.
+  final int desdeAnos;
+
+  /// Cuántos días más allá de hoy. Uno por defecto: quien registra de noche
+  /// puede estar anotando el movimiento de mañana.
+  final int hastaDias;
+
+  final String ayuda;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tk;
+    return InkWell(
+      onTap: () => _elegir(context),
+      borderRadius: BorderRadius.circular(8),
+      child: InputDecorator(
+        decoration: InputDecoration(labelText: etiqueta),
+        child: Row(
+          children: [
+            Icon(Icons.event_outlined, size: 18, color: t.muted),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                dia == hoy ? 'Hoy · ${fechaLarga(dia)}' : fechaLarga(dia),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 15, color: t.ink),
+              ),
+            ),
+            Icon(Icons.expand_more, size: 18, color: t.faint),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _elegir(BuildContext context) async {
+    final tope = DateTime.tryParse(hoy ?? '') ?? DateTime.now();
+    final elegida = await showDatePicker(
+      context: context,
+      initialDate: DateTime.tryParse(dia) ?? tope,
+      firstDate: DateTime(tope.year - desdeAnos),
+      lastDate: tope.add(Duration(days: hastaDias)),
+      helpText: ayuda,
+      cancelText: 'Cancelar',
+      confirmText: 'Listo',
+    );
+    if (elegida != null) onCambiar(diaDe(elegida));
+  }
 }

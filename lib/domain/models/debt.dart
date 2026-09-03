@@ -33,6 +33,12 @@ enum DebtKind {
         DebtKind.card => 'Tarjeta',
         DebtKind.other => 'Otra',
       };
+
+  String get wire => switch (this) {
+        DebtKind.person => 'person',
+        DebtKind.card => 'card',
+        DebtKind.other => 'other',
+      };
 }
 
 /// De que lado esta la plata.
@@ -68,6 +74,12 @@ enum DueEvery {
         DueEvery.biweekly => 'Cada quincena',
         DueEvery.monthly => 'Cada mes',
       };
+
+  String get wire => switch (this) {
+        DueEvery.weekly => 'weekly',
+        DueEvery.biweekly => 'biweekly',
+        DueEvery.monthly => 'monthly',
+      };
 }
 
 /// El acuerdo de pago, cuando lo hay. Al usuario de solo lectura no le llega:
@@ -99,6 +111,7 @@ class Debt {
     required this.direction,
     this.counterpart,
     this.note,
+    this.interestRate,
     required this.active,
     required this.totals,
     required this.currencies,
@@ -120,6 +133,11 @@ class Debt {
   final DebtDirection direction;
   final String? counterpart;
   final String? note;
+
+  /// Interes anual en %. Solo lo usa el simulador: el saldo registrado no
+  /// cambia solo. Entre familia normalmente va vacio.
+  final double? interestRate;
+
   final bool active;
 
   /// Los totales, uno por cada moneda en la que haya algo.
@@ -163,6 +181,7 @@ class Debt {
         direction: DebtDirection.parse(j['direction'] as String?),
         counterpart: j['counterpart'] as String?,
         note: j['note'] as String?,
+        interestRate: (j['interestRate'] as num?)?.toDouble(),
         active: (j['active'] as int) == 1,
         totals: (j['totals'] as Map<String, dynamic>)
             .map((k, v) => MapEntry(k, Totals.fromJson(v as Map<String, dynamic>))),

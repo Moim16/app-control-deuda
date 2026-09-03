@@ -110,26 +110,6 @@ class _EntryFormSheetState extends State<EntryFormSheet> {
     if (vm.guardar.errorMessage == null) Navigator.of(context).pop(true);
   }
 
-  Future<void> _elegirFecha() async {
-    final vm = context.read<EntryFormViewModel>();
-    final hoy = DateTime.parse(vm.hoy);
-    final elegida = await showDatePicker(
-      context: context,
-      initialDate: DateTime.tryParse(vm.draft.day) ?? hoy,
-      firstDate: DateTime(hoy.year - 10),
-      // Un día más que hoy: quien registra de noche puede estar anotando el
-      // movimiento de mañana, y es lo que ya permite la web.
-      lastDate: hoy.add(const Duration(days: 1)),
-      helpText: 'Fecha del movimiento',
-      cancelText: 'Cancelar',
-      confirmText: 'Listo',
-    );
-    if (elegida == null || !mounted) return;
-    final d = '${elegida.year}-${elegida.month.toString().padLeft(2, '0')}'
-        '-${elegida.day.toString().padLeft(2, '0')}';
-    vm.cambiarDia(d);
-  }
-
   @override
   Widget build(BuildContext context) {
     final t = context.tk;
@@ -169,10 +149,10 @@ class _EntryFormSheetState extends State<EntryFormSheet> {
               // corregir sí hay que poder cambiarlo: un abono mal cargado como
               // préstamo deja el saldo al revés.
               if (!vm.esNuevo) ...[
-                _Segmentado(
+                Segmentado<EntryKind>(
                   opciones: [
-                    (EntryKind.loan, lado.prestamo, Icons.arrow_upward),
-                    (EntryKind.payment, lado.abono, Icons.arrow_downward),
+                    (EntryKind.loan, lado.prestamo, Icons.arrow_upward, t.bad),
+                    (EntryKind.payment, lado.abono, Icons.arrow_downward, t.ok),
                   ],
                   elegida: vm.draft.kind,
                   onElegir: vm.cambiarKind,
@@ -220,27 +200,12 @@ class _EntryFormSheetState extends State<EntryFormSheet> {
               ),
               const SizedBox(height: 14),
 
-              // La fecha se toca, no se escribe: un campo de texto con formato
-              // es la forma más fácil de meter una fecha que no existe.
-              InkWell(
-                onTap: _elegirFecha,
-                borderRadius: BorderRadius.circular(8),
-                child: InputDecorator(
-                  decoration: const InputDecoration(labelText: 'Fecha'),
-                  child: Row(
-                    children: [
-                      Icon(Icons.event_outlined, size: 18, color: t.muted),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          _fechaConHoy(vm.draft.day, vm.hoy),
-                          style: TextStyle(fontSize: 15, color: t.ink),
-                        ),
-                      ),
-                      Icon(Icons.expand_more, size: 18, color: t.faint),
-                    ],
-                  ),
-                ),
+              CampoFecha(
+                etiqueta: 'Fecha',
+                dia: vm.draft.day,
+                hoy: vm.hoy,
+                onCambiar: vm.cambiarDia,
+                ayuda: 'Fecha del movimiento',
               ),
               const SizedBox(height: 14),
 
@@ -321,14 +286,6 @@ class _EntryFormSheetState extends State<EntryFormSheet> {
         ),
       ),
     );
-  }
-
-  /// "hoy · martes, 3 de septiembre de 2026": decir el día de la semana evita
-  /// registrar sin darse cuenta el movimiento en la fecha de ayer.
-  static String _fechaConHoy(String day, String hoy) {
-    final texto = fechaLarga(day);
-    if (day == hoy) return 'Hoy · $texto';
-    return texto;
   }
 }
 
@@ -437,75 +394,5 @@ class _Comprobante extends StatelessWidget {
       ),
     );
     if (origen != null) await vm.elegirComprobante(origen);
-  }
-}
-
-/* -------------------------------------------------------------- segmentado -- */
-
-/// Dos botones pegados, uno elegido. El equivalente del `.seg` de la web.
-class _Segmentado extends StatelessWidget {
-  const _Segmentado({
-    required this.opciones,
-    required this.elegida,
-    required this.onElegir,
-  });
-
-  final List<(EntryKind, String, IconData)> opciones;
-  final EntryKind elegida;
-  final ValueChanged<EntryKind> onElegir;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = context.tk;
-    return Container(
-      decoration: BoxDecoration(
-        color: t.soft,
-        borderRadius: BorderRadius.circular(9),
-        border: Border.all(color: t.line),
-      ),
-      padding: const EdgeInsets.all(3),
-      child: Row(
-        children: [
-          for (final (kind, texto, icono) in opciones)
-            Expanded(
-              child: InkWell(
-                onTap: () => onElegir(kind),
-                borderRadius: BorderRadius.circular(7),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 9),
-                  decoration: BoxDecoration(
-                    color: kind == elegida ? t.card : Colors.transparent,
-                    borderRadius: BorderRadius.circular(7),
-                    border: Border.all(
-                      color: kind == elegida ? t.line2 : Colors.transparent,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        icono,
-                        size: 16,
-                        color: kind == elegida
-                            ? (kind == EntryKind.loan ? t.bad : t.ok)
-                            : t.faint,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        texto,
-                        style: TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: kind == elegida ? FontWeight.w700 : FontWeight.w500,
-                          color: kind == elegida ? t.ink : t.muted,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
   }
 }

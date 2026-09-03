@@ -6,14 +6,18 @@ import 'package:provider/provider.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../data/repositories/debt_repository.dart';
 import '../../../domain/models/debt.dart';
+import '../../../domain/agregados.dart';
 import '../../../domain/models/entry.dart';
 import '../../../utils/result.dart';
 import '../../core/formato.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/vocabulario.dart';
 import '../../core/widgets/comunes.dart';
+import '../../core/widgets/graficos.dart';
+import '../../sim/widgets/sim_screen.dart';
 import '../view_model/debt_view_model.dart';
 import 'comments_thread.dart';
+import 'debt_form_sheet.dart';
 import 'entry_detail_sheet.dart';
 import 'entry_form_sheet.dart';
 import 'entry_tile.dart';
@@ -80,6 +84,25 @@ class _DebtBody extends StatelessWidget {
             ),
           ],
         ),
+        actions: [
+          // Simular tiene sentido para quien mira tambien: su pregunta es la
+          // misma, "cuando se acaba esto".
+          if (debt.currencies.any((c) => debt.pendingIn(c) > 0))
+            IconButton(
+              icon: const Icon(Icons.calculate_outlined, size: 21),
+              tooltip: 'Simular abonos',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => SimScreen(debtId: debt.id)),
+              ),
+            ),
+          // Editar la ficha (el nombre, el acuerdo, cerrarla) es del dueño.
+          if (me.isOwner && vm.hoy != null)
+            IconButton(
+              icon: const Icon(Icons.edit_outlined, size: 21),
+              tooltip: 'Editar la ${lado.cosa}',
+              onPressed: () => _editar(context, vm, debt, vm.hoy!),
+            ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: vm.reload.run,
@@ -173,10 +196,12 @@ class _DebtBody extends StatelessWidget {
             _Pestanas(vm: vm, lado: lado),
             const SizedBox(height: 12),
 
-            if (vm.tab == DebtTab.movimientos)
-              _Movimientos(vm: vm, lado: lado, puedeEscribir: me.isOwner)
-            else
-              CommentsThread(vm: vm, soloLectura: !me.isOwner),
+            switch (vm.tab) {
+              DebtTab.movimientos =>
+                _Movimientos(vm: vm, lado: lado, puedeEscribir: me.isOwner),
+              DebtTab.graficos => _Graficos(vm: vm, lado: lado),
+              DebtTab.comentarios => CommentsThread(vm: vm, soloLectura: !me.isOwner),
+            },
           ],
         ),
       ),
@@ -194,6 +219,28 @@ class _DebtBody extends StatelessWidget {
         .map((c) => plata(debt.pendingIn(c), c))
         .join(' y ');
     return '$base · también ${lado.chip} $otras';
+  }
+}
+
+/// Abre la ficha de la deuda para editarla. Si se borro, se sale de la
+/// pantalla: no tiene sentido quedarse mirando algo que ya no existe.
+Future<void> _editar(BuildContext context, DebtViewModel vm, Debt debt, String hoy) async {
+  final r = await DebtFormSheet.abrir(
+    context,
+    hoy: hoy,
+    direccion: debt.direction,
+    debt: debt,
+  );
+  if (!context.mounted || r == null) return;
+
+  switch (r) {
+    case DeudaBorrada():
+      Navigator.of(context).pop();
+      aviso(context, 'Borrado');
+    case DeudaGuardada():
+    case DeudaCreada():
+      await vm.refrescar();
+      if (context.mounted) aviso(context, 'Guardado');
   }
 }
 
@@ -287,8 +334,16 @@ class _Pestanas extends StatelessWidget {
         children: [
           for (final tab in DebtTab.values)
             _Pestana(
-              texto: tab == DebtTab.movimientos ? 'Movimientos' : 'Comentarios',
-              cuenta: tab == DebtTab.movimientos ? vm.allEntries.length : comentarios,
+              texto: switch (tab) {
+                DebtTab.movimientos => 'Movimientos',
+                DebtTab.graficos => 'Gráficos',
+                DebtTab.comentarios => 'Comentarios',
+              },
+              cuenta: switch (tab) {
+                DebtTab.movimientos => vm.allEntries.length,
+                DebtTab.graficos => 0,
+                DebtTab.comentarios => comentarios,
+              },
               activa: vm.tab == tab,
               onTap: () => vm.showTab(tab),
             ),
@@ -424,7 +479,7 @@ class _Movimientos extends StatelessWidget {
       builder: (_) => EntryDetailSheet(
         entry: e,
         lado: lado,
-        cargarComprobante: vm.receipt,
+        vm: vm,
         puedeEditar: puedeEscribir,
       ),
     );
@@ -471,5 +526,106 @@ class _Movimientos extends StatelessWidget {
       case Err<void>(:final message):
         aviso(context, message, malo: true);
     }
+  }
+}
+
+/// Los dos gráficos de la deuda: cómo va el saldo y qué pasó cada mes.
+class _Graficos extends StatelessWidget {
+  const _Graficos({required this.vm, required this.lado});
+
+  final DebtViewModel vm;
+  final Lado lado;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tk;
+    final cur = vm.currency;
+    final movs = vm.deLaMoneda;
+
+    if (movs.isEmpty) {
+      return Card(
+        child: Vacio(
+          'Cuando haya movimientos, aquí se ven los gráficos.',
+          icono: Icons.show_chart,
+        ),
+      );
+    }
+
+    final meses = vm.meses;
+    final etiquetas = [for (final m in meses) mesCorto('$m-01')];
+    final saldo = [
+      Serie(nombre: 'Saldo', color: t.serie[0], valores: saldoAlCierre(movs, meses)),
+    ];
+    final flujo = flujoPorMes(movs, meses);
+    final barras = [
+      Serie(nombre: lado.prestamos, color: t.serie[0], valores: flujo.prestado),
+      // El verde es el tercer color de la paleta, no el segundo: el segundo es
+      // naranja y al lado del azul se lee como "lo mismo pero peor".
+      Serie(nombre: lado.abonos, color: t.serie[2], valores: flujo.abonado),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _Tarjeta(
+          titulo: 'Saldo al cierre de cada mes',
+          sub: 'Últimos 12 meses · ${Moneda.de(cur).name}',
+          etiquetas: etiquetas,
+          series: saldo,
+          moneda: cur,
+        ),
+        const SizedBox(height: 12),
+        _Tarjeta(
+          titulo: '${lado.prestamos} y ${lado.abonos.toLowerCase()} por mes',
+          sub: 'Cuánto entró y cuánto se ${lado == Lado.meDeben ? 'cobró' : 'pagó'} cada mes',
+          etiquetas: etiquetas,
+          series: barras,
+          moneda: cur,
+          forma: FormaGrafico.barras,
+        ),
+      ],
+    );
+  }
+}
+
+class _Tarjeta extends StatelessWidget {
+  const _Tarjeta({
+    required this.titulo,
+    required this.sub,
+    required this.etiquetas,
+    required this.series,
+    required this.moneda,
+    this.forma = FormaGrafico.linea,
+  });
+
+  final String titulo;
+  final String sub;
+  final List<String> etiquetas;
+  final List<Serie> series;
+  final String moneda;
+  final FormaGrafico forma;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tk;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              titulo,
+              style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600, color: t.ink),
+            ),
+            const SizedBox(height: 2),
+            Text(sub, style: TextStyle(fontSize: 12.5, color: t.faint)),
+            const SizedBox(height: 14),
+            Grafico(series: series, etiquetas: etiquetas, moneda: moneda, forma: forma),
+            TablaGrafico(etiquetas: etiquetas, series: series, moneda: moneda),
+          ],
+        ),
+      ),
+    );
   }
 }

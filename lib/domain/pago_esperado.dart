@@ -9,6 +9,7 @@
 //  Vive en `domain` justamente para poder probarla sin levantar una pantalla.
 // =============================================================================
 
+import 'dia.dart';
 import 'models/debt.dart';
 
 /// El proximo pago esperado y si ya se paso.
@@ -66,9 +67,9 @@ PagoEsperado? proximoPago(Debt debt, String today) {
     // la app dando vueltas: son mas de 11 años de pagos semanales.
     while (i++ < 600 && day.compareTo(ultimoPago) <= 0) {
       day = switch (plan.every) {
-        DueEvery.monthly => _addMonths(plan.from, i),
-        DueEvery.weekly => _fmt(_parse(plan.from).add(Duration(days: 7 * i))),
-        DueEvery.biweekly => _fmt(_parse(plan.from).add(Duration(days: 14 * i))),
+        DueEvery.monthly => masMeses(plan.from, i),
+        DueEvery.weekly => masDias(plan.from, 7 * i),
+        DueEvery.biweekly => masDias(plan.from, 14 * i),
       };
     }
   }
@@ -82,15 +83,3 @@ PagoEsperado? proximoPago(Debt debt, String today) {
 }
 
 DateTime _parse(String yyyymmdd) => DateTime.parse(yyyymmdd);
-
-String _fmt(DateTime d) =>
-    '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-
-/// Sumar meses respetando el fin de mes: el 31 mas un mes cae en el ultimo dia
-/// de febrero, no en el 3 de marzo.
-String _addMonths(String day, int months) {
-  final d = _parse(day);
-  final destino = DateTime(d.year, d.month + months, 1);
-  final ultimoDelMes = DateTime(destino.year, destino.month + 1, 0).day;
-  return _fmt(DateTime(destino.year, destino.month, d.day < ultimoDelMes ? d.day : ultimoDelMes));
-}

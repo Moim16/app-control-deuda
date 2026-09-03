@@ -12,6 +12,7 @@
 //  versiones distintas del mismo problema.
 // =============================================================================
 
+import '../dia.dart';
 import 'entry.dart';
 
 /// Qué hacer con el comprobante al guardar. Son tres cosas distintas y no un
@@ -95,8 +96,8 @@ class EntryDraft {
   /// permite la web.
   String? problema({required String hoy}) {
     if (monto == null) return 'El monto debe ser mayor que cero.';
-    if (!_diaValido(day)) return 'La fecha no es válida.';
-    if (day.compareTo(_masUnDia(hoy)) > 0) return 'Esa fecha todavía no llega.';
+    if (!diaValido(day)) return 'La fecha no es válida.';
+    if (day.compareTo(masDias(hoy, 1)) > 0) return 'Esa fecha todavía no llega.';
     if (!const ['NIO', 'USD'].contains(currency)) return 'Moneda inválida.';
     if (reason.trim().length > 120) return 'El motivo es muy largo.';
     if (note.trim().length > 500) return 'La nota es muy larga.';
@@ -104,27 +105,6 @@ class EntryDraft {
   }
 
   bool esValido({required String hoy}) => problema(hoy: hoy) == null;
-
-  /// Un YYYY-MM-DD que existe de verdad.
-  ///
-  /// La ida y vuelta no es paranoia: Dart no falla con un día que no existe,
-  /// lo CORRE — `DateTime.parse('2026-02-30')` devuelve el 2 de marzo. Sin esta
-  /// comprobación, el 30 de febrero pasaría y se guardaría otra fecha. Es la
-  /// misma vuelta que da `parseDay` en la API.
-  static bool _diaValido(String day) {
-    if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(day)) return false;
-    final d = DateTime.tryParse(day);
-    return d != null && _iso(d) == day;
-  }
-
-  static String _masUnDia(String day) {
-    final d = DateTime.tryParse(day);
-    return d == null ? day : _iso(d.add(const Duration(days: 1)));
-  }
-
-  static String _iso(DateTime d) =>
-      '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}'
-      '-${d.day.toString().padLeft(2, '0')}';
 
   /// El movimiento que ya existe, para abrir el formulario en modo edición.
   factory EntryDraft.de(Entry e) => EntryDraft(
