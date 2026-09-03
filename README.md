@@ -35,6 +35,12 @@ flutter test        # 17 pruebas
 flutter build apk   # el APK para instalar
 ```
 
+En un Xiaomi con HyperOS hay que activar, dentro de *Opciones de desarrollador*,
+**Depuración USB** y también **Instalar vía USB**; si no, `adb` responde
+`INSTALL_FAILED_USER_RESTRICTED`. El teléfono vuelve a pedir confirmación cada
+vez que la instalación es nueva y no una actualización — por ejemplo después de
+cambiar el icono, que obliga a desinstalar.
+
 ### Lo que hace falta instalado
 
 Flutter SDK, JDK 17 y el Android SDK (`platform-tools`, `platforms;android-36`, `build-tools;36.0.0`). **Android Studio no es necesario**: basta con las *command-line tools* del SDK, y se edita en VS Code con la extensión de Flutter. En esta máquina está todo bajo `C:\dev`.
@@ -69,3 +75,7 @@ La única cuenta que hace la app es la del **próximo pago** de un acuerdo, porq
 **La misma deuda se lee al revés según quién mire.** El dueño ve *"le debo C$3,500"*; su hermano, que es el acreedor, ve *"me deben C$3,500"*. Todo ese vocabulario vive en `ui/core/vocabulario.dart`, igual que la constante `SIDE` de la web.
 
 **El separador de miles se fija a mano.** Los datos de `es_NI` que trae `intl` usan el punto para los miles (`C$3.500`); en Nicaragua se escribe con coma (`C$3,500.50`), que es lo que ya muestra la web. Las dos apps tienen que decir lo mismo.
+
+**El icono se genera con un script, no es un binario suelto.** `node tool/make_icons.mjs` dibuja los mipmaps de las cinco densidades pixel a pixel y codifica el PNG a mano con `zlib`, que ya viene en Node: cero dependencias de imagen y el icono se puede rehacer cuando cambie el diseño, en vez de quedar como un archivo que nadie sabe de dónde salió. La misma cartera se pinta dentro de la app con un `CustomPainter` (`ui/core/widgets/marca.dart`), así que se ve nítida a cualquier tamaño y toma los colores de los tokens.
+
+La geometría está duplicada a propósito en `scripts/make-icons.mjs` del repo web: son dos repos, y acoplarlos por un dibujo de cuarenta líneas sería peor que copiarlo. Los comentarios de los dos avisan que tienen que decir lo mismo.
