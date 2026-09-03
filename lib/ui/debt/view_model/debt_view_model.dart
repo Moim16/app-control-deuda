@@ -52,6 +52,10 @@ class DebtViewModel extends ChangeNotifier {
   /// La moneda que se está mirando (una deuda puede estar en dos).
   String get currency => debt?.currencyToShow(_currency) ?? 'NIO';
 
+  /// Hoy segun el servidor. Es el tope y el valor por defecto de la fecha de un
+  /// movimiento, asi que no puede salir del reloj del telefono.
+  String? get hoy => _debts.summary?.today;
+
   PagoEsperado? get pago {
     final d = debt;
     final hoy = _debts.summary?.today;
@@ -85,6 +89,18 @@ class DebtViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  /// Borra un movimiento. El saldo lo recalcula el servidor; aqui solo se tira
+  /// lo que habia en memoria.
+  Future<Result<void>> borrarMovimiento(int entryId) async {
+    final r = await _debts.deleteEntry(entryId, debtId: debtId);
+    if (r.isOk) await _load(force: true);
+    return r;
+  }
+
+  /// Se llama despues de registrar o corregir: el repositorio ya invalido su
+  /// cache, pero esta pantalla necesita la lista nueva.
+  Future<void> refrescar() => _load(force: true);
 
   void showTab(DebtTab t) {
     if (_tab == t) return;

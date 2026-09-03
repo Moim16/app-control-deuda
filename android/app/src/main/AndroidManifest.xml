@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="deudas_app"
+        android:label="Deudas"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -31,6 +31,13 @@
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
+    <!-- El comprobante se puede tomar con la camara, pero la app sirve igual
+         sin ella (queda la galeria): "required=false" para que la Play Store no
+         la esconda en un dispositivo sin camara. No hace falta el permiso
+         CAMERA: image_picker abre la camara del sistema con ACTION_IMAGE_CAPTURE
+         y es esa app la que tiene el permiso. -->
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
+
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
          https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.

@@ -12,3 +12,6 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# Cache incremental del compilador de Kotlin, que aparece al compilar con plugins.
+.kotlin/

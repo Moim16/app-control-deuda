@@ -20,6 +20,7 @@ import 'package:provider/provider.dart';
 import 'data/repositories/auth_repository.dart';
 import 'data/repositories/debt_repository.dart';
 import 'data/services/api_client.dart';
+import 'data/services/comprobante.dart';
 import 'data/services/session_store.dart';
 import 'ui/auth/view_model/login_view_model.dart';
 import 'ui/auth/widgets/login_screen.dart';
@@ -40,6 +41,9 @@ void main() {
     MultiProvider(
       providers: [
         Provider<ApiClient>.value(value: api),
+        // La camara y la galeria: un servicio, no un repositorio, porque no
+        // guarda nada — solo traduce lo que da el telefono a lo que pide la API.
+        Provider<ComprobanteService>(create: (_) => ComprobanteService()),
         ChangeNotifierProvider(
           create: (_) => AuthRepository(api: api, store: store),
         ),

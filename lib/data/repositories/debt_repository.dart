@@ -14,6 +14,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../domain/models/comment.dart';
 import '../../domain/models/entry.dart';
+import '../../domain/models/entry_draft.dart';
 import '../../domain/models/summary.dart';
 import '../../utils/result.dart';
 import '../services/api_client.dart';
@@ -71,27 +72,17 @@ class DebtRepository extends ChangeNotifier {
         esSesionVencida: _vencida,
       );
 
-  Future<Result<void>> addEntry({
-    required int debtId,
-    required EntryKind kind,
-    required String day,
-    required num amount,
-    required String currency,
-    String? reason,
-    String? note,
-    String? receipt,
-  }) =>
-      Result.guard<void>(
+  /// Registra un movimiento. El cuerpo se arma desde el borrador para que la
+  /// pantalla no tenga que saber como se llaman los campos en la API.
+  Future<Result<void>> addEntry(int debtId, EntryDraft d) => Result.guard<void>(
         () async {
           await _api.post('/api/entries', {
             'debtId': debtId,
-            'kind': kind.wire,
-            'day': day,
-            'amount': amount,
-            'currency': currency,
-            if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
-            if (note != null && note.trim().isNotEmpty) 'note': note.trim(),
-            if (receipt != null) 'receipt': receipt,
+            'kind': d.kind.wire,
+            'day': d.day,
+            'amount': d.monto,
+            'currency': d.currency,
+            ..._opcionales(d),
           });
           // El saldo cambio: lo que hay en memoria ya no vale.
           _invalidate(debtId);
@@ -100,6 +91,54 @@ class DebtRepository extends ChangeNotifier {
         alMensaje: _mensaje,
         esSesionVencida: _vencida,
       );
+
+  /// Corrige un movimiento ya registrado.
+  Future<Result<void>> updateEntry(int entryId, {required int debtId, required EntryDraft d}) =>
+      Result.guard<void>(
+        () async {
+          await _api.put('/api/entries?id=$entryId', {
+            'kind': d.kind.wire,
+            'day': d.day,
+            'amount': d.monto,
+            'currency': d.currency,
+            // Al editar, el motivo y la nota van SIEMPRE, incluso vacios: es la
+            // forma de borrar lo que decia antes.
+            'reason': d.reason.trim(),
+            'note': d.note.trim(),
+            ..._comprobante(d),
+          });
+          _invalidate(debtId);
+          await loadSummary(force: true);
+        },
+        alMensaje: _mensaje,
+        esSesionVencida: _vencida,
+      );
+
+  /// Borra el movimiento, su comprobante y sus comentarios.
+  Future<Result<void>> deleteEntry(int entryId, {required int debtId}) => Result.guard<void>(
+        () async {
+          await _api.delete('/api/entries?id=$entryId');
+          _invalidate(debtId);
+          await loadSummary(force: true);
+        },
+        alMensaje: _mensaje,
+        esSesionVencida: _vencida,
+      );
+
+  /// Al registrar, un campo vacio se deja fuera: la API ya guarda null.
+  static Map<String, Object?> _opcionales(EntryDraft d) => {
+        if (d.reason.trim().isNotEmpty) 'reason': d.reason.trim(),
+        if (d.note.trim().isNotEmpty) 'note': d.note.trim(),
+        ..._comprobante(d),
+      };
+
+  /// La API distingue tres cosas: la clave ausente no toca el comprobante, en
+  /// null lo borra, y con un data URI lo reemplaza.
+  static Map<String, Object?> _comprobante(EntryDraft d) => switch (d.receipt) {
+        ComprobanteIgual() => const {},
+        ComprobanteQuitado() => const {'receipt': null},
+        ComprobanteNuevo(:final dataUri) => {'receipt': dataUri},
+      };
 
   /* --------------------------------------------------------- comentarios -- */
 

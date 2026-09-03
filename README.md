@@ -31,7 +31,7 @@ El `API_URL` es opcional: si no se pasa, la app pide la dirección del servidor 
 
 ```bash
 flutter analyze     # sin avisos
-flutter test        # 17 pruebas
+flutter test        # 45 pruebas
 flutter build apk   # el APK para instalar
 ```
 
@@ -56,7 +56,9 @@ Flutter SDK, JDK 17 y el Android SDK (`platform-tools`, `platforms;android-36`, 
 | ✅ | Ficha de una deuda: saldo, movimientos con su saldo corrido, comprobantes |
 | ✅ | Comentarios: leer, escribir y borrar los propios |
 | ✅ | Tema claro y oscuro, siguiendo el del teléfono |
-| ⬜ | Registrar préstamos y abonos desde la app (hoy solo se leen) |
+| ✅ | Registrar préstamos y abonos, con comprobante de la cámara o la galería |
+| ✅ | Corregir y borrar un movimiento |
+| ⬜ | Crear una deuda nueva (se crean desde la web) |
 | ⬜ | Gastos del hogar, ingresos y vehículo |
 | ⬜ | Gráficos |
 | ⬜ | Notificaciones push — la razón principal de tener app nativa |
@@ -75,6 +77,10 @@ La única cuenta que hace la app es la del **próximo pago** de un acuerdo, porq
 **La misma deuda se lee al revés según quién mire.** El dueño ve *"le debo C$3,500"*; su hermano, que es el acreedor, ve *"me deben C$3,500"*. Todo ese vocabulario vive en `ui/core/vocabulario.dart`, igual que la constante `SIDE` de la web.
 
 **El separador de miles se fija a mano.** Los datos de `es_NI` que trae `intl` usan el punto para los miles (`C$3.500`); en Nicaragua se escribe con coma (`C$3,500.50`), que es lo que ya muestra la web. Las dos apps tienen que decir lo mismo.
+
+**El comprobante se recodifica a JPEG siempre.** La API solo lo acepta en JPEG, porque es el único formato que se puede incrustar tal cual en el PDF del estado de cuenta. Y hay que recodificar, no solo achicar: el comprobante más común es una captura de la transferencia, que es PNG, y `image_picker` en Android conserva el formato del original — pedirle calidad 82 no convierte un PNG en JPEG. Va en `data/services/comprobante.dart`, en otro isolate para que no se note el tirón, con fondo blanco por debajo (el JPEG no tiene transparencia: sin eso, lo transparente sale negro) y bajando calidad y tamaño hasta que quepa en el tope del servidor.
+
+**La fecha se valida con ida y vuelta.** `DateTime.parse('2026-02-30')` no falla en Dart: devuelve el 2 de marzo. Sin comparar la fecha reconstruida con la que entró, el 30 de febrero pasaría la validación y se guardaría otro día. Es la misma vuelta que da `parseDay` en la API.
 
 **El icono se genera con un script, no es un binario suelto.** `node tool/make_icons.mjs` dibuja los mipmaps de las cinco densidades pixel a pixel y codifica el PNG a mano con `zlib`, que ya viene en Node: cero dependencias de imagen y el icono se puede rehacer cuando cambie el diseño, en vez de quedar como un archivo que nadie sabe de dónde salió. La misma cartera se pinta dentro de la app con un `CustomPainter` (`ui/core/widgets/marca.dart`), así que se ve nítida a cualquier tamaño y toma los colores de los tokens.
 

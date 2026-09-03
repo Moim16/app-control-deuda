@@ -40,6 +40,10 @@ class Lado {
     required this.vacio,
     required this.sinMovimientos,
     required this.primerMovimiento,
+    required this.ayudaPrestamo,
+    required this.ayudaAbono,
+    required this.pistaMotivoPrestamo,
+    required this.pistaMotivoAbono,
   });
 
   /// "Debo" · "Me deben"
@@ -98,6 +102,14 @@ class Lado {
   final String sinMovimientos;
   final String primerMovimiento;
 
+  /// Debajo del titulo del formulario: que hace este movimiento con el saldo.
+  final String ayudaPrestamo;
+  final String ayudaAbono;
+
+  /// Los ejemplos del campo "Motivo".
+  final String pistaMotivoPrestamo;
+  final String pistaMotivoAbono;
+
   static const debo = Lado(
     tab: 'Debo',
     cosa: 'deuda',
@@ -122,6 +134,10 @@ class Lado {
     sinMovimientos:
         'Todavía no hay nada registrado.\nVe cargando los préstamos que te han hecho: el saldo se calcula solo.',
     primerMovimiento: 'Registrar el primer préstamo',
+    ayudaPrestamo: 'Algo que te prestaron: sube lo que debes.',
+    ayudaAbono: 'Un pago tuyo: baja lo que debes.',
+    pistaMotivoPrestamo: 'Para la moto, universidad, emergencia…',
+    pistaMotivoAbono: 'Abono de marzo, transferencia…',
   );
 
   static const meDeben = Lado(
@@ -148,6 +164,10 @@ class Lado {
     sinMovimientos:
         'Todavía no hay nada registrado.\nVe cargando lo que le prestaste: el saldo se calcula solo.',
     primerMovimiento: 'Registrar el primer préstamo',
+    ayudaPrestamo: 'Algo que prestaste: sube lo que te deben.',
+    ayudaAbono: 'Un pago que recibiste: baja lo que te deben.',
+    pistaMotivoPrestamo: 'Para la moto, universidad, emergencia…',
+    pistaMotivoAbono: 'Pago de marzo, me transfirió…',
   );
 }
 

@@ -8,7 +8,7 @@ lib/
   routing/                      las rutas (go_router)
   domain/models/                qué es una deuda, un movimiento, un comentario
   data/
-    services/                   habla con el mundo: HTTP y almacenamiento
+    services/                   habla con el mundo: HTTP, almacenamiento, cámara
     repositories/               la fuente de verdad de la app
   ui/
     core/                       tema, formato, vocabulario, widgets compartidos
@@ -28,7 +28,8 @@ ui  ─────►  data  ─────►  (API / almacenamiento)
 
 - **`ui`** pinta y recibe toques. Una `View` (widget) no sabe qué es HTTP; le pide todo a su `ViewModel`.
 - **`data/repositories`** es a lo que la UI le pregunta. Decide de dónde sale el dato y guarda lo que hay en memoria para no volver a pedirlo.
-- **`data/services`** es lo único que sabe de `http` y de `shared_preferences`. Si mañana cambia el transporte, se cambia aquí y nada más.
+- **`data/services`** es lo único que sabe de `http`, de `shared_preferences` y de la cámara. Si mañana cambia el transporte, se cambia aquí y nada más.
+- **`domain/models`** también lleva las reglas de qué es un dato válido cuando son del negocio y no del formulario: `EntryDraft` sabe que un monto tiene que ser mayor que cero y que la fecha no puede ser de pasado mañana, y por eso se prueba sin pantalla.
 - **`domain/models`** son objetos de datos sin comportamiento ni dependencias. Los conocen todas las capas.
 
 **Nunca al revés.** Un repositorio no importa nada de `ui`; un modelo no importa nada de nadie. Es lo que permite probar la lógica sin levantar la app.

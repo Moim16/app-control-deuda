@@ -1,10 +1,10 @@
 // El detalle de un movimiento, con su comprobante.
 
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+import '../../../data/services/comprobante.dart';
 import '../../../domain/models/entry.dart';
 import '../../../utils/result.dart';
 import '../../core/formato.dart';
@@ -12,12 +12,17 @@ import '../../core/theme/app_theme.dart';
 import '../../core/vocabulario.dart';
 import '../../core/widgets/comunes.dart';
 
+/// Lo que se pidio desde el detalle. La hoja no corrige ni borra: devuelve la
+/// intencion y se cierra, y de eso se encarga la pantalla que la abrio.
+enum AccionMovimiento { corregir, borrar }
+
 class EntryDetailSheet extends StatefulWidget {
   const EntryDetailSheet({
     super.key,
     required this.entry,
     required this.lado,
     required this.cargarComprobante,
+    this.puedeEditar = false,
   });
 
   final Entry entry;
@@ -26,6 +31,10 @@ class EntryDetailSheet extends StatefulWidget {
   /// Se pasa la función en vez del repositorio: esta hoja no necesita saber de
   /// dónde sale la imagen.
   final Future<Result<String>> Function(int entryId) cargarComprobante;
+
+  /// Solo el dueño corrige o borra. Quien mira de solo lectura ve el detalle
+  /// completo, incluido el comprobante, pero sin los botones.
+  final bool puedeEditar;
 
   @override
   State<EntryDetailSheet> createState() => _EntryDetailSheetState();
@@ -50,23 +59,12 @@ class _EntryDetailSheetState extends State<EntryDetailSheet> {
       _cargando = false;
       switch (r) {
         case Ok<String>(:final value):
-          _imagen = _decodificar(value);
+          _imagen = bytesDeDataUri(value);
           if (_imagen == null) _error = 'No se pudo leer la imagen.';
         case Err<String>(:final message):
           _error = message;
       }
     });
-  }
-
-  /// La API manda el comprobante como data URI ("data:image/jpeg;base64,...").
-  static Uint8List? _decodificar(String dataUri) {
-    final coma = dataUri.indexOf(',');
-    if (coma < 0) return null;
-    try {
-      return base64Decode(dataUri.substring(coma + 1));
-    } catch (_) {
-      return null;
-    }
   }
 
   @override
@@ -155,6 +153,29 @@ class _EntryDetailSheetState extends State<EntryDetailSheet> {
                   ),
                 ),
               ),
+            if (widget.puedeEditar) ...[
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => Navigator.of(context).pop(AccionMovimiento.corregir),
+                      icon: const Icon(Icons.edit_outlined, size: 17),
+                      label: const Text('Corregir'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => Navigator.of(context).pop(AccionMovimiento.borrar),
+                      style: OutlinedButton.styleFrom(foregroundColor: t.bad),
+                      icon: const Icon(Icons.delete_outline, size: 17),
+                      label: const Text('Borrar'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
