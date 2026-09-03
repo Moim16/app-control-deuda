@@ -1,0 +1,26 @@
+name: deudas_app
+description: "Deudas, cobros y gastos: la app nativa contra la misma API."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Lo justo. Nada de librerias de estado gigantes ni de UI de terceros: la
+  # app es una lista, un formulario y un grafico, y Material ya los trae.
+  http: ^1.2.2                  # las llamadas a la API
+  shared_preferences: ^2.3.2    # el token de sesion, como el localStorage
+  provider: ^6.1.2              # el estado, sin ceremonia
+  intl: ^0.19.0                 # fechas y montos en español de Nicaragua
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true

@@ -1,0 +1,22 @@
+# Las reglas por defecto de Flutter, con dos ajustes explicados.
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    # Dart no permite parametros con nombre privados (`this._api`), asi que la
+    # sugerencia de esta regla es imposible de aplicar en un constructor con
+    # nombre que asigna un campo privado. Los repositorios de este proyecto son
+    # exactamente ese caso.
+    prefer_initializing_formals: false
+
+    # Las comillas simples ya son la norma del proyecto; se deja explicito para
+    # que no dependa de la version de flutter_lints.
+    prefer_single_quotes: true
+
+analyzer:
+  errors:
+    # Un TODO no debe romper el analisis, pero tampoco pasar desapercibido.
+    todo: info
+  exclude:
+    - build/**
+    - android/**
