@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/comunes.dart';
+import '../../core/widgets/marca.dart';
 import '../view_model/login_view_model.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -161,27 +162,6 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// El cuadrito con las monedas: la misma marca del icono de la PWA.
-class Marca extends StatelessWidget {
-  const Marca({super.key, this.size = 52});
-
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = context.tk;
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: t.ink,
-        borderRadius: BorderRadius.circular(size * 0.29),
-      ),
-      child: Icon(Icons.savings_outlined, color: t.onInk, size: size * 0.55),
     );
   }
 }

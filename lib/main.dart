@@ -24,6 +24,7 @@ import 'data/services/session_store.dart';
 import 'ui/auth/view_model/login_view_model.dart';
 import 'ui/auth/widgets/login_screen.dart';
 import 'ui/core/theme/app_theme.dart';
+import 'ui/core/widgets/marca.dart';
 import 'ui/summary/view_model/summary_view_model.dart';
 import 'ui/summary/widgets/summary_screen.dart';
 
