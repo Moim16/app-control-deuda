@@ -14,6 +14,7 @@ import 'package:provider/provider.dart';
 
 import '../../../data/repositories/auth_repository.dart';
 import '../../../data/repositories/debt_repository.dart';
+import '../../../data/repositories/spend_repository.dart';
 import '../../../domain/models/debt.dart';
 import '../../../domain/simulacion.dart';
 import '../../core/formato.dart';
@@ -32,7 +33,11 @@ class SimScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => SimViewModel(debts: context.read<DebtRepository>(), debtId: debtId),
+      create: (_) => SimViewModel(
+        debts: context.read<DebtRepository>(),
+        gastos: context.read<SpendRepository>(),
+        debtId: debtId,
+      ),
       child: const _SimBody(),
     );
   }
@@ -148,6 +153,15 @@ class _Contenido extends StatelessWidget {
                 ),
                 const SizedBox(height: 14),
                 _CampoInteres(vm: vm, debt: o.debt),
+                if (vm.capacidad case final cap? when cap.libre > 0) ...[
+                  const SizedBox(height: 14),
+                  Aviso(
+                    'Según tus ingresos y lo que gastas, te sobran '
+                    '${plata(cap.libre, cur)} al mes.',
+                    tono: Tono.bueno,
+                    icono: Icons.savings_outlined,
+                  ),
+                ],
                 const SizedBox(height: 16),
                 Text(
                   cobro ? 'Cuánto me abona cada vez' : 'Cuánto abono cada vez',

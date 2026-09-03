@@ -19,12 +19,14 @@ import 'package:provider/provider.dart';
 
 import 'data/repositories/auth_repository.dart';
 import 'data/repositories/debt_repository.dart';
+import 'data/repositories/spend_repository.dart';
 import 'data/services/api_client.dart';
 import 'data/services/comprobante.dart';
 import 'data/services/session_store.dart';
 import 'ui/auth/view_model/login_view_model.dart';
 import 'ui/auth/widgets/login_screen.dart';
 import 'ui/core/theme/app_theme.dart';
+import 'ui/core/widgets/cascara.dart';
 import 'ui/core/widgets/marca.dart';
 import 'ui/summary/view_model/summary_view_model.dart';
 import 'ui/summary/widgets/summary_screen.dart';
@@ -49,6 +51,9 @@ void main() {
         ),
         ChangeNotifierProvider(
           create: (_) => DebtRepository(api: api),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => SpendRepository(api: api),
         ),
       ],
       child: const AppDeudas(),
@@ -125,15 +130,19 @@ class _PuertaState extends State<Puerta> {
       // Al salir de la sesión no puede quedar nada de la cuenta anterior en
       // memoria: el siguiente que entre vería datos que no son suyos.
       context.read<DebtRepository>().clear();
+      context.read<SpendRepository>().clear();
       return ChangeNotifierProvider(
         create: (_) => LoginViewModel(auth: auth),
         child: const LoginScreen(),
       );
     }
 
+    // El dueño tiene deudas y gastos, asi que va con la barra de abajo. Quien
+    // entra de solo lectura no tiene mas que su deuda: se le da la pantalla
+    // sola, sin ofrecerle pestañas que la API le va a negar.
     return ChangeNotifierProvider(
       create: (_) => SummaryViewModel(debts: context.read<DebtRepository>()),
-      child: const SummaryScreen(),
+      child: auth.me?.isOwner == true ? const Cascara() : const SummaryScreen(),
     );
   }
 }

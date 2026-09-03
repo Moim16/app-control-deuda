@@ -19,6 +19,7 @@ import '../view_model/debt_view_model.dart';
 import 'comments_thread.dart';
 import 'debt_form_sheet.dart';
 import 'entry_detail_sheet.dart';
+import 'estado_cuenta_sheet.dart';
 import 'entry_form_sheet.dart';
 import 'entry_tile.dart';
 
@@ -85,6 +86,18 @@ class _DebtBody extends StatelessWidget {
           ],
         ),
         actions: [
+          // Compartir lo puede hacer cualquiera que vea la deuda: el papel es
+          // el mismo, solo se lee desde el otro lado.
+          IconButton(
+            icon: const Icon(Icons.ios_share, size: 20),
+            tooltip: 'Compartir el estado de cuenta',
+            onPressed: () => EstadoCuentaSheet.abrir(
+              context,
+              vm: vm,
+              debt: debt,
+              lado: lado,
+            ),
+          ),
           // Simular tiene sentido para quien mira tambien: su pregunta es la
           // misma, "cuando se acaba esto".
           if (debt.currencies.any((c) => debt.pendingIn(c) > 0))

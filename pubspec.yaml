@@ -22,6 +22,13 @@ dependencies:
   # pantalla es PNG, y ni la cámara ni la galería garantizan el formato, así
   # que se recodifica aquí antes de subirlo.
   image: ^4.3.0
+  # El estado de cuenta. La version web escribe el PDF a mano (byte a byte, con
+  # su propia tabla de anchos de Helvetica) porque no podia traer dependencias;
+  # aqui no hay esa limitante, y reescribir un generador de PDF a mano seria
+  # trabajo de mas para un resultado peor.
+  pdf: ^3.11.1
+  printing: ^5.13.4           # compartir, guardar o imprimir el PDF
+  share_plus: ^10.1.2         # el resumen en texto, para WhatsApp
 
 dev_dependencies:
   flutter_test:

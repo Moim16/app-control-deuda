@@ -31,7 +31,7 @@ El `API_URL` es opcional: si no se pasa, la app pide la dirección del servidor 
 
 ```bash
 flutter analyze     # sin avisos
-flutter test        # 102 pruebas
+flutter test        # 161 pruebas
 flutter build apk   # el APK para instalar
 ```
 
@@ -62,8 +62,10 @@ Flutter SDK, JDK 17 y el Android SDK (`platform-tools`, `platforms;android-36`, 
 | ✅ | Comentarios por movimiento, no solo de la deuda entera |
 | ✅ | Gráficos: saldo al cierre de cada mes y flujo mensual |
 | ✅ | Simulador: cuándo se acaba abonando X cada tanto, hasta 3 escenarios |
-| ⬜ | Estado de cuenta para compartir |
-| ⬜ | Gastos del hogar, ingresos y vehículo |
+| ✅ | Estado de cuenta en PDF y resumen para WhatsApp |
+| ✅ | Gastos del hogar: presupuesto, categorías y captura del recibo |
+| ✅ | Ingresos y capacidad de pago, conectada al simulador |
+| ⬜ | Vehículo: mantenimientos y accesorios |
 | ⬜ | Usuarios: crear el de solo lectura y asignarle deudas |
 | ⬜ | Notificaciones push — la razón principal de tener app nativa |
 | ⬜ | Publicar en la Play Store |
@@ -81,6 +83,8 @@ La única cuenta que hace la app es la del **próximo pago** de un acuerdo, porq
 **La misma deuda se lee al revés según quién mire.** El dueño ve *"le debo C$3,500"*; su hermano, que es el acreedor, ve *"me deben C$3,500"*. Todo ese vocabulario vive en `ui/core/vocabulario.dart`, igual que la constante `SIDE` de la web.
 
 **El separador de miles se fija a mano.** Los datos de `es_NI` que trae `intl` usan el punto para los miles (`C$3.500`); en Nicaragua se escribe con coma (`C$3,500.50`), que es lo que ya muestra la web. Las dos apps tienen que decir lo mismo.
+
+**El PDF sí usa una librería, y el resto no.** La web escribe el PDF byte a byte, con su propia tabla de anchos de Helvetica, porque no podía traer dependencias. Aquí no hay esa limitante: reescribir un generador de PDF a mano sería trabajo de más para un resultado peor, así que el estado de cuenta usa `pdf` + `printing`. Los gráficos, en cambio, siguen dibujados a mano — ahí el problema no era la dependencia sino el criterio visual.
 
 **Los gráficos se dibujan a mano.** Sin librería de charts: lo que hace falta son dos formas, y una librería trae su propio criterio visual (rejillas gruesas, colores que no son los de la app) que después hay que pelear. Con un `CustomPainter` la anatomía es exactamente la de la web — un solo eje, rejilla hairline, la paleta de series validada para daltonismo, tabla gemela siempre y el globo al tocar. Está en `ui/core/widgets/graficos.dart`.
 

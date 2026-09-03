@@ -9,7 +9,9 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../data/repositories/debt_repository.dart';
+import '../../../data/repositories/spend_repository.dart';
 import '../../../domain/dia.dart';
+import '../../../domain/gastos.dart';
 import '../../../domain/models/debt.dart';
 import '../../../domain/simulacion.dart';
 
@@ -25,14 +27,23 @@ class Simulable {
 }
 
 class SimViewModel extends ChangeNotifier {
-  SimViewModel({required DebtRepository debts, int? debtId})
-      : _debts = debts,
+  SimViewModel({
+    required DebtRepository debts,
+    required SpendRepository gastos,
+    int? debtId,
+  })  : _debts = debts,
+        _gastos = gastos,
         _debtIdInicial = debtId {
     _debts.addListener(_alCambiar);
     _acomodar();
   }
 
   final DebtRepository _debts;
+
+  /// Los gastos y los ingresos, para poder decir cuanto sobra de verdad al mes.
+  /// Es lo que separa el simulador de un juego de numeros.
+  final SpendRepository _gastos;
+
   final int? _debtIdInicial;
 
   /// Hasta tres montos a la vez: comparar dos planes es el 90% del uso, y con
@@ -75,6 +86,21 @@ class SimViewModel extends ChangeNotifier {
     return ops.first;
   }
 
+  /// Lo que de verdad sobra al mes, si la app lo sabe. Solo tiene sentido en
+  /// una deuda propia: en un cobro, quien tiene que poder pagar es el otro.
+  Capacidad? get capacidad {
+    final o = elegida;
+    if (o == null || o.debt.isReceivable) return null;
+    final d = _gastos.data;
+    if (d == null) return null;
+    return capacidadDe(
+      ingresos: d.incomes,
+      gastos: d.expenses,
+      moneda: o.currency,
+      hoy: d.today,
+    );
+  }
+
   double get interes {
     final n = double.tryParse(_rate.replaceAll(',', '').trim()) ?? 0;
     return (n.isFinite && n > 0) ? n : 0;
@@ -114,7 +140,7 @@ class SimViewModel extends ChangeNotifier {
     final o = elegida;
     if (o != null) {
       _rate = _interesDe(o);
-      _montos = [_sugerido(o)];
+      _montos = [_sugerir(o)];
     }
     notifyListeners();
   }
@@ -167,7 +193,7 @@ class SimViewModel extends ChangeNotifier {
     final ops = opciones;
     if (ops.isEmpty) return;
     if (_key != null && ops.any((o) => o.key == _key)) {
-      if (_montos.isEmpty) _montos = [_sugerido(elegida!)];
+      if (_montos.isEmpty) _montos = [_sugerir(elegida!)];
       return;
     }
     // La deuda desde la que se abrió el simulador, si trajo saldo.
@@ -177,7 +203,19 @@ class SimViewModel extends ChangeNotifier {
     final o = inicial ?? ops.first;
     _key = o.key;
     _rate = _interesDe(o);
-    _montos = [_sugerido(o)];
+    _montos = [_sugerir(o)];
+  }
+
+  /// El monto de arranque: lo que de verdad sobra al mes si la app lo sabe, y
+  /// si no, pagarlo en un año. Lo primero es un numero real; lo segundo, un
+  /// deseo — pero es mejor que empezar en blanco.
+  String _sugerir(Simulable o) {
+    final cap = capacidad;
+    if (cap != null && cap.libre > 0) {
+      final v = cap.libre < o.balance ? cap.libre : o.balance;
+      return v.round().toString();
+    }
+    return _sugerido(o);
   }
 
   static String _interesDe(Simulable o) {
@@ -186,12 +224,8 @@ class SimViewModel extends ChangeNotifier {
     return r == r.roundToDouble() ? r.toStringAsFixed(0) : r.toString();
   }
 
-  /// Lo que se propone abonar: pagarlo en un año, redondeado a algo que uno
-  /// diría en voz alta (decenas en córdobas, unidades en dólares).
-  ///
-  /// La web además propone lo que de verdad sobra al mes cuando conoce los
-  /// ingresos y los gastos. Eso llegará aquí cuando la app tenga ese módulo:
-  /// es un número real, y esto solo un deseo.
+  /// Pagarlo en un año, redondeado a algo que uno diría en voz alta (decenas
+  /// en córdobas, unidades en dólares).
   static String _sugerido(Simulable o) {
     final paso = o.currency == 'USD' ? 1 : 10;
     final v = (o.balance / 12 / paso).round() * paso;
