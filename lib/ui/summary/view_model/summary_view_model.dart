@@ -20,8 +20,8 @@ import '../../../utils/result.dart';
 
 class SummaryViewModel extends ChangeNotifier {
   SummaryViewModel({required DebtRepository debts}) : _debts = debts {
-    load = Command0<AccountSummary>(_load);
-    refresh = Command0<AccountSummary>(() => _load(force: true));
+    load = Command0<AccountSummary>(_load)..addListener(notifyListeners);
+    refresh = Command0<AccountSummary>(() => _load(force: true))..addListener(notifyListeners);
     _debts.addListener(notifyListeners);
   }
 

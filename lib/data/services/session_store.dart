@@ -1,19 +1,22 @@
 // =============================================================================
-//  Lo unico que sabe de almacenamiento en el telefono.
+//  Lo unico que sabe de almacenamiento en el telefono: el token de sesion.
 //
-//  Guarda el token de sesion y la direccion del servidor, que es el equivalente
-//  del localStorage de la PWA.
+//  La direccion del servidor NO se guarda ni se pregunta. Antes habia un campo
+//  "Cambiar el servidor" en la pantalla de entrada, y era un pie de foto de una
+//  app de desarrollo: quien la usa no tiene por que saber que existe una URL, y
+//  equivocarse ahi deja la app sin poder entrar sin decir por que.
+//
+//  Para apuntar a la maquina de desarrollo se compila con
+//  `--dart-define=API_URL=http://192.168.x.x:3000`, que es donde vive esa
+//  decision.
 // =============================================================================
 
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SessionStore {
   static const _tokenKey = 'dd_token';
-  static const _urlKey = 'dd_url';
 
-  /// Donde vive la API en produccion. Se puede sobreescribir al compilar
-  /// (`--dart-define=API_URL=http://192.168.x.x:3000`) para apuntar a la
-  /// maquina de desarrollo, y tambien desde la pantalla de entrada.
+  /// Donde vive la API.
   static const produccion = 'https://control-deuda.vercel.app';
 
   static const compiledUrl = String.fromEnvironment('API_URL', defaultValue: produccion);
@@ -26,13 +29,6 @@ class SessionStore {
 
   Future<void> clearToken() async => (await _prefs).remove(_tokenKey);
 
-  /// La direccion guardada; si no hay, la de compilacion.
-  Future<String> readUrl() async => (await _prefs).getString(_urlKey) ?? compiledUrl;
-
-  Future<void> writeUrl(String url) async =>
-      (await _prefs).setString(_urlKey, _normalize(url));
-
-  /// Sin espacios ni barra al final, para que `$baseUrl/api/...` no quede con
-  /// doble barra.
-  static String _normalize(String url) => url.trim().replaceAll(RegExp(r'/+$'), '');
+  /// Sin barra al final, para que `$baseUrl/api/...` no quede con doble barra.
+  String get url => compiledUrl.trim().replaceAll(RegExp(r'/+$'), '');
 }

@@ -73,7 +73,7 @@ class _UsersScreenState extends State<UsersScreen> {
     final lista = _usuarios;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Usuarios con acceso')),
+      appBar: AppBar(title: const Text('Usuarios con acceso'), bottom: const BarraCargando()),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'fab-usuarios',
         onPressed: () => _abrir(),

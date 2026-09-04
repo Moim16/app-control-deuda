@@ -30,16 +30,14 @@ class AuthRepository extends ChangeNotifier {
   /// a la persona fuera para siempre — no hay correo configurado.
   Recuperacion get recuperacion => _recuperacion;
 
-  String get baseUrl => _api.baseUrl;
-  bool get hasServer => _api.baseUrl.isNotEmpty;
 
   /// Recupera lo guardado y comprueba con el servidor que la sesion siga
   /// valiendo. Devuelve `Ok(null)` si simplemente no habia sesion: eso no es
   /// un error, es la primera vez.
   Future<Result<Me?>> restore() async {
-    _api.baseUrl = await _store.readUrl();
+    _api.baseUrl = _store.url;
     _api.token = await _store.readToken();
-    if (_api.token == null || _api.baseUrl.isEmpty) return const Ok(null);
+    if (_api.token == null) return const Ok(null);
 
     final r = await _fetchMe();
     if (r case Err<Me?> e when e.sessionExpired) {
@@ -69,14 +67,10 @@ class AuthRepository extends ChangeNotifier {
   Future<Result<Me>> signIn({
     required String user,
     required String password,
-    String? serverUrl,
   }) =>
       Result.guard<Me>(
         () async {
-          if (serverUrl != null && serverUrl.trim() != _api.baseUrl) {
-            await _store.writeUrl(serverUrl);
-            _api.baseUrl = await _store.readUrl();
-          }
+          _api.baseUrl = _store.url;
           final j = await _api.post('/api/auth', {'name': user, 'password': password});
           _api.token = j['token'] as String;
           await _store.writeToken(_api.token!);
@@ -151,14 +145,10 @@ class AuthRepository extends ChangeNotifier {
     required String usuario,
     required String codigo,
     required String password,
-    String? serverUrl,
   }) =>
       Result.guard<String>(
         () async {
-          if (serverUrl != null && serverUrl.trim() != _api.baseUrl) {
-            await _store.writeUrl(serverUrl);
-            _api.baseUrl = await _store.readUrl();
-          }
+          _api.baseUrl = _store.url;
           final j = await _api.post('/api/auth?recover=1', {
             'name': usuario.trim(),
             'code': codigo.trim(),
@@ -205,42 +195,79 @@ class AuthRepository extends ChangeNotifier {
         esSesionVencida: _vencida,
       );
 
-  /// Crea una cuenta nueva y entra con ella. Devuelve el codigo de
-  /// recuperacion, que se enseña UNA sola vez: el dueño es el unico al que
-  /// nadie mas puede rescatar.
+  /// Pide el codigo de confirmacion para una cuenta nueva.
+  ///
+  /// Todavia no se crea nada: el servidor valida los datos, manda un codigo de
+  /// seis digitos al correo y espera. Devuelve true si hay que pedir el codigo,
+  /// y false si el servidor no tiene correo configurado y ya creo la cuenta
+  /// (entonces la sesion queda abierta y `codigoRecuperacion` trae el suyo).
   ///
   /// El servidor puede tener el registro cerrado (ALLOW_SIGNUP=0), y entonces
   /// responde que no. Es una respuesta valida, no un fallo de la app.
-  Future<Result<String>> registrar({
+  Future<Result<bool>> pedirCodigo({
     required String usuario,
     required String password,
     required String nombre,
-    String? serverUrl,
+    required String correo,
   }) =>
-      Result.guard<String>(
+      Result.guard<bool>(
         () async {
-          if (serverUrl != null && serverUrl.trim() != _api.baseUrl) {
-            await _store.writeUrl(serverUrl);
-            _api.baseUrl = await _store.readUrl();
-          }
+          _api.baseUrl = _store.url;
           final j = await _api.post('/api/auth?signup=1', {
             'name': usuario.trim(),
             'password': password,
             'fullName': nombre.trim(),
+            'email': correo.trim(),
           });
-          _api.token = j['token'] as String;
-          await _store.writeToken(_api.token!);
-          _me = Me.fromJson(
-            j['user'] as Map<String, dynamic>,
-            account: j['account'] as Map<String, dynamic>?,
-          );
-          _recuperacion = const Recuperacion(tiene: true);
-          notifyListeners();
-          return (j['recovery'] as String?) ?? '';
+          // `pending` = el codigo va en camino. Si no viene, el servidor creo la
+          // cuenta de una porque no tiene correo configurado.
+          if (j['pending'] == true) return true;
+          _entrar(j);
+          return false;
         },
         alMensaje: _mensaje,
         esSesionVencida: _vencida,
       );
+
+  /// Confirma el codigo y crea la cuenta. Devuelve el codigo de recuperacion,
+  /// que se enseña UNA sola vez: el dueño es el unico al que nadie mas puede
+  /// rescatar.
+  Future<Result<String>> confirmarCodigo({
+    required String correo,
+    required String codigo,
+  }) =>
+      Result.guard<String>(
+        () async {
+          _api.baseUrl = _store.url;
+          final j = await _api.post('/api/auth?verify=1', {
+            'email': correo.trim(),
+            'code': codigo.trim(),
+          });
+          return _entrar(j);
+        },
+        alMensaje: _mensaje,
+        esSesionVencida: _vencida,
+      );
+
+  /// El codigo de recuperacion de la cuenta que se acaba de crear sin pasar por
+  /// el correo. Vacio si no hubo ninguna.
+  String get codigoRecuperacion => _codigoNuevo;
+  String _codigoNuevo = '';
+
+  /// Guarda la sesion que devuelve el servidor y entrega el codigo de
+  /// recuperacion. Lo comparten los dos caminos que abren sesion creando cuenta.
+  String _entrar(Map<String, dynamic> j) {
+    _api.token = j['token'] as String;
+    _store.writeToken(_api.token!);
+    _me = Me.fromJson(
+      j['user'] as Map<String, dynamic>,
+      account: j['account'] as Map<String, dynamic>?,
+    );
+    _recuperacion = const Recuperacion(tiene: true);
+    _codigoNuevo = (j['recovery'] as String?) ?? '';
+    notifyListeners();
+    return _codigoNuevo;
+  }
 
   Future<void> signOut() => _clear();
 

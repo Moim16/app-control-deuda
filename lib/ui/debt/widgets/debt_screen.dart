@@ -64,6 +64,7 @@ class _DebtBody extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        bottom: const BarraCargando(),
         titleSpacing: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

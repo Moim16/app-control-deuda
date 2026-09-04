@@ -16,8 +16,8 @@ class DebtFormViewModel extends ChangeNotifier {
     this.debt,
   })  : _debts = debts,
         _draft = inicial {
-    guardar = Command0<Debt?>(_guardar);
-    borrar = Command0<void>(_borrar);
+    guardar = Command0<Debt?>(_guardar)..addListener(notifyListeners);
+    borrar = Command0<void>(_borrar)..addListener(notifyListeners);
   }
 
   final DebtRepository _debts;

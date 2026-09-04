@@ -27,7 +27,7 @@ class CategoriesScreen extends StatelessWidget {
     final archivadas = data?.categories.where((c) => !c.active).toList() ?? const [];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Categorías')),
+      appBar: AppBar(title: const Text('Categorías'), bottom: const BarraCargando()),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'fab-categorias',
         onPressed: () => _abrirForm(context),

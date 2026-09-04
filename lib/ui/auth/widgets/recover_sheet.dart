@@ -17,16 +17,14 @@ import '../../core/theme/app_theme.dart';
 import '../../core/widgets/comunes.dart';
 
 class RecoverSheet extends StatefulWidget {
-  const RecoverSheet({super.key, required this.usuario, required this.servidor});
+  const RecoverSheet({super.key, required this.usuario});
 
   /// Lo que ya se hubiera escrito en la pantalla de entrada.
   final String usuario;
-  final String servidor;
 
   static Future<void> abrir(
     BuildContext context, {
     String usuario = '',
-    String servidor = '',
   }) =>
       showModalBottomSheet<void>(
         context: context,
@@ -35,7 +33,7 @@ class RecoverSheet extends StatefulWidget {
         isDismissible: false,
         enableDrag: false,
         constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.94),
-        builder: (_) => RecoverSheet(usuario: usuario, servidor: servidor),
+        builder: (_) => RecoverSheet(usuario: usuario),
       );
 
   @override
@@ -81,7 +79,6 @@ class _RecoverSheetState extends State<RecoverSheet> {
           usuario: _usuario.text,
           codigo: _codigo.text,
           password: _password.text,
-          serverUrl: widget.servidor.trim().isEmpty ? null : widget.servidor,
         );
     if (!mounted) return;
 
@@ -153,6 +150,7 @@ class _RecoverSheetState extends State<RecoverSheet> {
                     TextField(
                       controller: _password,
                       obscureText: true,
+                      autofillHints: const [AutofillHints.newPassword],
                       decoration: const InputDecoration(
                         labelText: 'Contraseña nueva',
                         hintText: 'Mínimo 6 caracteres',

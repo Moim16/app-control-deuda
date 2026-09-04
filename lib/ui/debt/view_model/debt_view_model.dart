@@ -20,8 +20,8 @@ enum EntryFilter { todos, prestamos, abonos }
 
 class DebtViewModel extends ChangeNotifier {
   DebtViewModel({required DebtRepository debts, required this.debtId}) : _debts = debts {
-    load = Command0<List<Entry>>(_load);
-    reload = Command0<List<Entry>>(() => _load(force: true));
+    load = Command0<List<Entry>>(_load)..addListener(notifyListeners);
+    reload = Command0<List<Entry>>(() => _load(force: true))..addListener(notifyListeners);
     _debts.addListener(notifyListeners);
   }
 

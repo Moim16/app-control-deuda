@@ -29,7 +29,7 @@ class EntryFormViewModel extends ChangeNotifier {
         _comprobantes = comprobantes,
         _draft = inicial,
         _teniaComprobante = entry?.hasReceipt ?? false {
-    guardar = Command0<void>(_guardar);
+    guardar = Command0<void>(_guardar)..addListener(notifyListeners);
   }
 
   final DebtRepository _debts;

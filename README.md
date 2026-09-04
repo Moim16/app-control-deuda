@@ -31,7 +31,7 @@ El `API_URL` es opcional: si no se pasa, la app pide la dirección del servidor 
 
 ```bash
 flutter analyze     # sin avisos
-flutter test        # 177 pruebas
+flutter test        # 187 pruebas
 flutter build apk   # el APK para instalar
 ```
 
@@ -54,7 +54,7 @@ Flutter SDK, JDK 17 y el Android SDK (`platform-tools`, `platforms;android-36`, 
 | | |
 |---|---|
 | ✅ | Entrar, con la sesión guardada y la dirección del servidor configurable |
-| ✅ | Recuperar la contraseña con el código, y crear una cuenta nueva |
+| ✅ | Recuperar la contraseña con el código, y crear cuenta confirmando el correo |
 | ✅ | Resumen: *Debo* / *Me deben*, totales por moneda, lo que toca y la curva del año |
 | ✅ | Deudas: crear, editar, cerrar, borrar, con su acuerdo de pago |
 | ✅ | Movimientos: registrar, corregir y borrar, con comprobante |
@@ -102,6 +102,10 @@ La única cuenta que hace la app es la del **próximo pago** de un acuerdo, porq
 **La misma deuda se lee al revés según quién mire.** El dueño ve *"le debo C$3,500"*; su hermano, que es el acreedor, ve *"me deben C$3,500"*. Todo ese vocabulario vive en `ui/core/vocabulario.dart`, igual que la constante `SIDE` de la web.
 
 **El separador de miles se fija a mano.** Los datos de `es_NI` que trae `intl` usan el punto para los miles (`C$3.500`); en Nicaragua se escribe con coma (`C$3,500.50`), que es lo que ya muestra la web. Las dos apps tienen que decir lo mismo.
+
+**Un Command avisa a SUS oyentes, no a los del ViewModel.** Suena a detalle y era un bug: un login con la contraseña mala no decía nada, porque el comando guardaba el error pero nadie repintaba la pantalla. Todo ViewModel con comandos los reenvía con `..addListener(notifyListeners)`, y hay una prueba que compara las dos versiones para que no vuelva a pasar.
+
+**La barrita de carga sale del cliente HTTP.** `ApiClient` cuenta cuántas peticiones hay en el aire y `BarraCargando` la pinta bajo el AppBar. Va ahí — donde de verdad se sabe — y no en cada ViewModel contando a mano, que es como se acaba con una pantalla que dice que está cargando cuando ya terminó.
 
 **Los recordatorios son locales, no push.** Un acuerdo de "C$1,000 cada mes desde el 15" ya dice cuándo toca el siguiente pago: la fecha se sabe por adelantado. Programarlas en el teléfono funciona sin internet, sin servidor y sin batería de más. Lo que **no** se puede avisar así es lo que pasa por acción de otra persona ("tu hermano comentó"): eso necesita push de verdad, y llega a la PWA por Web Push.
 

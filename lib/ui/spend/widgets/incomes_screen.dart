@@ -32,7 +32,7 @@ class IncomesScreen extends StatelessWidget {
     final extras = data?.incomes.where((i) => !i.esSueldo).toList() ?? const <Income>[];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Ingresos')),
+      appBar: AppBar(title: const Text('Ingresos'), bottom: const BarraCargando()),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'fab-ingresos',
         onPressed: () => _abrirForm(context, hoy: hoy),

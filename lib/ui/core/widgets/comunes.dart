@@ -6,7 +6,9 @@
 // =============================================================================
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../../../data/services/api_client.dart';
 import '../../../domain/dia.dart';
 import '../formato.dart';
 import '../theme/app_theme.dart';
@@ -564,5 +566,38 @@ class CampoFecha extends StatelessWidget {
       confirmText: 'Listo',
     );
     if (elegida != null) onCambiar(diaDe(elegida));
+  }
+}
+
+/// La barrita de carga de arriba: se ve mientras haya alguna petición en el
+/// aire y desaparece sola.
+///
+/// Va en el `bottom` del AppBar, con dos píxeles de alto: no tapa nada, no
+/// bloquea, y contesta la única pregunta que uno se hace al tocar un botón —
+/// *¿está haciendo algo?*. Los botones tienen además su propia ruedita; esto es
+/// para lo que pasa sin que se haya tocado un botón (abrir una pestaña,
+/// refrescar, guardar y recargar de seguido).
+class BarraCargando extends StatelessWidget implements PreferredSizeWidget {
+  const BarraCargando({super.key});
+
+  @override
+  Size get preferredSize => const Size.fromHeight(2);
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tk;
+    return ValueListenableBuilder<int>(
+      valueListenable: context.read<ApiClient>().enVuelo,
+      builder: (context, cuantas, _) => SizedBox(
+        height: 2,
+        child: cuantas > 0
+            ? LinearProgressIndicator(
+                minHeight: 2,
+                backgroundColor: Colors.transparent,
+                color: t.ink,
+              )
+            : null,
+      ),
+    );
   }
 }

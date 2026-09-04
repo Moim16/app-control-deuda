@@ -8,6 +8,7 @@
 
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 /// Lo que lanza este cliente. El mensaje viene de la API, que responde en
@@ -37,6 +38,14 @@ class ApiClient {
   /// El token de la sesion en curso, o null.
   String? token;
 
+  /// Cuantas peticiones hay ahora mismo en el aire.
+  ///
+  /// Sirve para una sola cosa: pintar la barrita de carga arriba. Va aqui —
+  /// donde de verdad se sabe — y no en cada ViewModel contando a mano, que es
+  /// como se acaba con una pantalla que dice que esta cargando cuando ya
+  /// termino.
+  final ValueNotifier<int> enVuelo = ValueNotifier(0);
+
   static const _timeout = Duration(seconds: 20);
 
   Future<Map<String, dynamic>> get(String path) => _send('GET', path);
@@ -49,6 +58,7 @@ class ApiClient {
       throw ApiException('Falta decir dónde está el servidor.');
     }
 
+    enVuelo.value++;
     late http.Response res;
     try {
       final req = http.Request(method, Uri.parse('$baseUrl$path'))
@@ -60,6 +70,10 @@ class ApiClient {
       // La peticion no llego a salir: sin señal, o el servidor no contesta. Se
       // dice asi, no "SocketException".
       throw ApiException('Sin conexión. Revisa tu internet e intenta de nuevo.');
+    } finally {
+      // En el `finally`: si la peticion falla, la barrita tiene que parar
+      // igual. Si no, se queda girando para siempre.
+      enVuelo.value--;
     }
 
     final data = _decode(res.body);

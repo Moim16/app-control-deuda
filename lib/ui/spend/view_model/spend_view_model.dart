@@ -20,8 +20,8 @@ class SpendViewModel extends ChangeNotifier {
   SpendViewModel({required SpendRepository gastos, required DebtRepository deudas})
       : _gastos = gastos,
         _deudas = deudas {
-    load = Command0<SpendData>(_load);
-    refresh = Command0<SpendData>(() => _load(force: true));
+    load = Command0<SpendData>(_load)..addListener(notifyListeners);
+    refresh = Command0<SpendData>(() => _load(force: true))..addListener(notifyListeners);
     _gastos.addListener(notifyListeners);
   }
 

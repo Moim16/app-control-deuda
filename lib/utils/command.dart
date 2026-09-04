@@ -9,6 +9,18 @@
 //  `String? _error`, repetidos y con los mismos olvidos. Aqui esta una vez.
 //
 //  Es el patron que recomienda la guia de arquitectura de Flutter.
+//
+//  OJO CON ESTO: un Command es su PROPIO `ChangeNotifier`, asi que avisa a sus
+//  oyentes y no a los del ViewModel que lo contiene. Una pantalla que hace
+//  `context.watch<MiViewModel>()` y lee `vm.miComando.errorMessage` NO se
+//  repinta cuando el comando falla, y el error no aparece nunca.
+//
+//  Por eso todo ViewModel con comandos tiene que reenviar sus avisos:
+//
+//      miComando = Command0<X>(_hacer)..addListener(notifyListeners);
+//
+//  Costo un login fallido que no decia nada: la pantalla se quedaba igual, sin
+//  error y sin explicacion.
 // =============================================================================
 
 import 'package:flutter/foundation.dart';
