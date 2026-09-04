@@ -321,7 +321,7 @@ class _FormState extends State<_Form> {
               Text(
                 esViewer
                     ? 'Ve lo que le asignes y puede comentar. Nada más.'
-                    : 'Ve y edita todo, igual que tú: gastos, vehículo y todas las deudas.',
+                    : 'Ve y edita todo, igual que tú: los gastos y todas las deudas.',
                 style: TextStyle(fontSize: 12, color: esViewer ? t.faint : t.half, height: 1.4),
               ),
 

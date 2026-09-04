@@ -31,7 +31,7 @@ El `API_URL` es opcional: si no se pasa, la app pide la dirección del servidor 
 
 ```bash
 flutter analyze     # sin avisos
-flutter test        # 225 pruebas
+flutter test        # 177 pruebas
 flutter build apk   # el APK para instalar
 ```
 
@@ -63,10 +63,9 @@ Flutter SDK, JDK 17 y el Android SDK (`platform-tools`, `platforms;android-36`, 
 | ✅ | Estado de cuenta en PDF y resumen para WhatsApp |
 | ✅ | Gastos del hogar: presupuesto, categorías, detalle por categoría, captura |
 | ✅ | Ingresos y capacidad de pago, conectada al simulador |
-| ✅ | Vehículo: cuándo le toca cada cosa, mantenimientos y accesorios |
 | ✅ | Usuarios: crear el de solo lectura, asignarle deudas, activarlo o no |
 | ✅ | Ajustes: nombre de la cuenta, tema, contraseña, código de recuperación |
-| ✅ | Recordatorios: cuándo toca un pago y qué le toca al vehículo |
+| ✅ | Recordatorios: cuándo toca un pago |
 | ⬜ | Publicar en la Play Store |
 
 Lo que la app **no** tiene y la web sí: instalar la PWA (aquí no aplica) y el aviso de que alguien comentó — eso llega por Web Push, que no entra en una app nativa. Y al revés, la app tiene el tema guardado en el teléfono y los recordatorios sin depender de internet.
@@ -86,7 +85,6 @@ Lo que la app **no** tiene y la web sí: instalar la PWA (aquí no aplica) y el 
 | ✅ | Estado de cuenta en PDF y resumen para WhatsApp |
 | ✅ | Gastos del hogar: presupuesto, categorías y captura del recibo |
 | ✅ | Ingresos y capacidad de pago, conectada al simulador |
-| ✅ | Vehículo: cuándo le toca cada cosa, mantenimientos y accesorios |
 | ⬜ | Usuarios: crear el de solo lectura y asignarle deudas |
 | ⬜ | Notificaciones push — la razón principal de tener app nativa |
 | ⬜ | Publicar en la Play Store |
@@ -105,13 +103,9 @@ La única cuenta que hace la app es la del **próximo pago** de un acuerdo, porq
 
 **El separador de miles se fija a mano.** Los datos de `es_NI` que trae `intl` usan el punto para los miles (`C$3.500`); en Nicaragua se escribe con coma (`C$3,500.50`), que es lo que ya muestra la web. Las dos apps tienen que decir lo mismo.
 
-**Los recordatorios son locales, no push.** Un acuerdo de "C$1,000 cada mes desde el 15" ya dice cuándo toca el siguiente pago, y a la moto le toca aceite a los 6 meses: las fechas se saben por adelantado. Programarlas en el teléfono funciona sin internet, sin servidor y sin batería de más. Lo que **no** se puede avisar así es lo que pasa por acción de otra persona ("tu hermano comentó"): eso necesita push de verdad, y llega a la PWA por Web Push.
+**Los recordatorios son locales, no push.** Un acuerdo de "C$1,000 cada mes desde el 15" ya dice cuándo toca el siguiente pago: la fecha se sabe por adelantado. Programarlas en el teléfono funciona sin internet, sin servidor y sin batería de más. Lo que **no** se puede avisar así es lo que pasa por acción de otra persona ("tu hermano comentó"): eso necesita push de verdad, y llega a la PWA por Web Push.
 
-Lo que toca por **kilómetros** no se programa: no tiene fecha, depende de cuánto se ande. Eso se ve al abrir la app, que es donde el kilometraje está al día.
-
-Y se reprograma TODO de una vez en vez de ir tocando aviso por aviso: un abono registrado mueve la fecha del próximo pago y un mantenimiento pone al día tres tareas de un golpe, así que calcular el diferencial sería trabajo para equivocarse. Los ids son estables, así que reprogramar reemplaza en vez de duplicar.
-
-**Un mantenimiento es un registro que cubre varias tareas.** En la casa comercial le hacen a la moto aceite, filtro y cadena, y uno paga un solo monto. Anotar tres servicios sería inventarse tres gastos, así que se anota uno y se marcan las tres tareas: las tres quedan al día. Y para saber cuándo se hizo cada una no se mira un campo del servicio, sino la lista de tareas que ese servicio cubrió.
+Y se reprograma TODO de una vez en vez de ir tocando aviso por aviso: un abono registrado mueve la fecha del próximo pago, así que calcular el diferencial sería trabajo para equivocarse. Los ids son estables, así que reprogramar reemplaza en vez de duplicar.
 
 **El PDF sí usa una librería, y el resto no.** La web escribe el PDF byte a byte, con su propia tabla de anchos de Helvetica, porque no podía traer dependencias. Aquí no hay esa limitante: reescribir un generador de PDF a mano sería trabajo de más para un resultado peor, así que el estado de cuenta usa `pdf` + `printing`. Los gráficos, en cambio, siguen dibujados a mano — ahí el problema no era la dependencia sino el criterio visual.
 

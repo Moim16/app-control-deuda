@@ -1,9 +1,9 @@
 // =============================================================================
 //  Mantiene los recordatorios al día sin que nadie tenga que acordarse.
 //
-//  Va envolviendo la app: escucha los repositorios y, cuando cambian las deudas
-//  o el vehículo, reprograma. Es lo que evita el fallo clásico de esto — anotar
-//  un abono y que el teléfono siga avisando del pago viejo.
+//  Va envolviendo la app: escucha los repositorios y, cuando cambian las
+//  deudas, reprograma. Es lo que evita el fallo clásico de esto — anotar un
+//  abono y que el teléfono siga avisando del pago viejo.
 //
 //  No pinta nada: solo mira y reprograma.
 // =============================================================================
@@ -14,7 +14,6 @@ import 'package:provider/provider.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../data/repositories/avisos_repository.dart';
 import '../../../data/repositories/debt_repository.dart';
-import '../../../data/repositories/vehicle_repository.dart';
 import '../formato.dart';
 
 class SincronizaAvisos extends StatefulWidget {
@@ -35,7 +34,6 @@ class _SincronizaAvisosState extends State<SincronizaAvisos> {
   Widget build(BuildContext context) {
     final avisos = context.watch<AvisosRepository>();
     final deudas = context.watch<DebtRepository>();
-    final vehiculos = context.watch<VehicleRepository>();
     final me = context.watch<AuthRepository>().me;
 
     final resumen = deudas.summary;
@@ -48,8 +46,6 @@ class _SincronizaAvisosState extends State<SincronizaAvisos> {
         for (final d in resumen.debts)
           '${d.id}:${d.active}:${d.plan?.every.wire}:${d.plan?.amount}:'
               '${d.plan?.from}:${d.lastPaymentDay}:${d.currencies.map(d.pendingIn).join(',')}',
-        vehiculos.data?.services.length,
-        vehiculos.data?.tasks.length,
       ].join('|');
 
       if (huella != _ultima) {
@@ -60,7 +56,6 @@ class _SincronizaAvisosState extends State<SincronizaAvisos> {
           if (!mounted) return;
           avisos.sincronizar(
             deudas: resumen.debts,
-            vehiculos: vehiculos.data,
             hoy: resumen.today,
             // Para quien mira de solo lectura, su deuda es un cobro: el aviso
             // tiene que decirle "te deben", no "debes".

@@ -16,12 +16,10 @@ import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/avisos_repository.dart';
 import '../../data/repositories/debt_repository.dart';
 import '../../data/repositories/spend_repository.dart';
-import '../../data/repositories/vehicle_repository.dart';
 
 Future<void> cerrarSesion(BuildContext context) async {
   context.read<DebtRepository>().clear();
   context.read<SpendRepository>().clear();
-  context.read<VehicleRepository>().clear();
   // Los recordatorios programados son de esta cuenta: dejarlos puestos avisaría
   // de pagos que el siguiente que entre no tiene por qué ver.
   await context.read<AvisosRepository>().desactivar();

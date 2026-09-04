@@ -155,8 +155,7 @@ class MontoGrande extends StatelessWidget {
   final String titulo;
   final num? monto;
 
-  /// La moneda, si el número es plata. null cuando no lo es (el kilometraje de
-  /// un vehiculo no lleva simbolo de cordobas).
+  /// La moneda, si el número es plata. null cuando no lo es.
   final String? moneda;
 
   /// Lo que va detras del numero cuando no es plata: "km".

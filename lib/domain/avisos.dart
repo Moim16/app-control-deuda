@@ -3,9 +3,9 @@
 //
 //  La razón de tener una app nativa. Y la razón de que esto sea LOCAL y no
 //  push: las fechas ya se saben. Un acuerdo de "C$1,000 cada mes desde el 15"
-//  dice cuándo toca el siguiente pago sin preguntarle nada a nadie, y a la moto
-//  le toca aceite a los 3,000 km o a los 6 meses. Programar la notificación en
-//  el teléfono funciona sin internet, sin servidor y sin batería de más.
+//  dice cuándo toca el siguiente pago sin preguntarle nada a nadie, así que
+//  programar la notificación en el teléfono funciona sin internet, sin servidor
+//  y sin batería de más.
 //
 //  Lo que NO se puede avisar así es lo que pasa por acción de otra persona
 //  ("tu hermano comentó"): eso sí necesita push de verdad.
@@ -15,9 +15,7 @@
 // =============================================================================
 
 import 'dia.dart';
-import 'mantenimiento.dart';
 import 'models/debt.dart';
-import 'models/vehicle.dart';
 import 'pago_esperado.dart';
 
 /// Un recordatorio listo para programar.
@@ -104,56 +102,6 @@ List<Aviso> avisosDeDeudas({
   return out;
 }
 
-/// Los avisos del vehículo: lo que ya le toca.
-///
-/// Solo por TIEMPO. Lo que toca por kilómetros no tiene fecha — depende de
-/// cuánto se ande — así que programarlo sería adivinar; eso se ve al abrir la
-/// app, que es donde el kilometraje está al día.
-List<Aviso> avisosDeVehiculos({
-  required VehicleData data,
-  required String hoy,
-}) {
-  final out = <Aviso>[];
-
-  for (final v in data.activos) {
-    for (final st in tareasOrdenadas(
-      vehiculo: v,
-      tareas: data.tareasDe(v.id),
-      servicios: data.serviciosDe(v.id),
-      hoy: hoy,
-    )) {
-      final dias = st.diasFaltan;
-      if (dias == null) continue;
-
-      // Ya se pasó: se recuerda hoy.
-      if (dias <= 0) {
-        out.add(Aviso(
-          id: _id(_kTareaAtraso, st.tarea.id),
-          dia: hoy,
-          titulo: '${v.name}: le toca ${st.tarea.name.toLowerCase()}',
-          cuerpo: dias == 0
-              ? 'Toca hoy.'
-              : 'Lleva ${_plural(-dias, 'día', 'días')} de atraso.',
-        ));
-        continue;
-      }
-
-      // Una semana antes: es lo que uno tarda en conseguir cita en el taller.
-      final antes = masDias(hoy, dias - 7);
-      if (dias > 7) {
-        out.add(Aviso(
-          id: _id(_kTareaAntes, st.tarea.id),
-          dia: antes,
-          titulo: '${v.name}: pronto le toca ${st.tarea.name.toLowerCase()}',
-          cuerpo: 'En una semana.',
-        ));
-      }
-    }
-  }
-
-  return out;
-}
-
 /* -------------------------------------------------------------------------- */
 
 // Cada clase de aviso lleva su prefijo para que dos avisos de la misma deuda no
@@ -161,8 +109,6 @@ List<Aviso> avisosDeVehiculos({
 const _kDeudaAntes = 1;
 const _kDeudaHoy = 2;
 const _kDeudaAtraso = 3;
-const _kTareaAntes = 4;
-const _kTareaAtraso = 5;
 
 /// Un id estable y único a partir de la clase y el id de la fila.
 ///

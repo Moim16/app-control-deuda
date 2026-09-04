@@ -3,7 +3,6 @@
 
 import 'package:deudas_app/domain/avisos.dart';
 import 'package:deudas_app/domain/models/debt.dart';
-import 'package:deudas_app/domain/models/vehicle.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const hoy = '2026-09-03';
@@ -193,119 +192,6 @@ void main() {
         expect(a.id, lessThan(2147483647));
         expect(a.id, greaterThan(0));
       }
-    });
-  });
-
-  group('el vehículo', () {
-    Vehicle moto({int? km}) => Vehicle(
-          id: 1,
-          name: 'Mi moto',
-          kind: VehicleKind.moto,
-          active: true,
-          odometer: km,
-          services: 1,
-          spent: const {},
-        );
-
-    VehicleTask tarea({int id = 10, int? cadaKm, int? cadaMeses, String nombre = 'Aceite'}) =>
-        VehicleTask(
-          id: id,
-          vehicleId: 1,
-          name: nombre,
-          everyKm: cadaKm,
-          everyMonths: cadaMeses,
-          active: true,
-        );
-
-    Service servicio(String dia, {int? km, List<int> tareas = const [10]}) => Service(
-          id: 100,
-          vehicleId: 1,
-          kind: ServiceKind.service,
-          taskIds: tareas,
-          day: dia,
-          odometer: km,
-          title: 'Mantenimiento',
-          currency: 'NIO',
-          hasReceipt: false,
-        );
-
-    VehicleData datos({
-      required List<VehicleTask> tareas,
-      List<Service> servicios = const [],
-      int? km,
-    }) =>
-        VehicleData(
-          today: hoy,
-          vehicles: [moto(km: km)],
-          tasks: tareas,
-          services: servicios,
-        );
-
-    test('lo que ya se pasó por fecha se recuerda hoy', () {
-      final avisos = avisosDeVehiculos(
-        data: datos(
-          tareas: [tarea(cadaMeses: 6)],
-          servicios: [servicio('2025-06-03')],
-        ),
-        hoy: hoy,
-      );
-      expect(avisos.single.dia, hoy);
-      expect(avisos.single.titulo, contains('Mi moto'));
-      expect(avisos.single.cuerpo, contains('atraso'));
-    });
-
-    test('lo que viene se avisa una semana antes', () {
-      // 2026-06-03 + 6 meses = 2026-12-03; una semana antes es el 2026-11-26.
-      final avisos = avisosDeVehiculos(
-        data: datos(
-          tareas: [tarea(cadaMeses: 6)],
-          servicios: [servicio('2026-06-03')],
-        ),
-        hoy: hoy,
-      );
-      expect(avisos.single.dia, '2026-11-26');
-    });
-
-    test('lo que toca SOLO por kilómetros no se programa', () {
-      // No tiene fecha: depende de cuánto se ande, así que ponerle una sería
-      // adivinar. Eso se ve al abrir la app.
-      final avisos = avisosDeVehiculos(
-        data: datos(
-          tareas: [tarea(cadaKm: 3000)],
-          servicios: [servicio('2026-08-01', km: 10000)],
-          km: 13500,
-        ),
-        hoy: hoy,
-      );
-      expect(avisos, isEmpty);
-    });
-
-    test('una tarea que nunca se ha hecho no genera aviso con fecha', () {
-      // "Nunca" no tiene día al que programar; se ve al abrir la app.
-      final avisos = avisosDeVehiculos(
-        data: datos(tareas: [tarea(cadaMeses: 6)]),
-        hoy: hoy,
-      );
-      expect(avisos, isEmpty);
-    });
-
-    test('un vehículo archivado no avisa', () {
-      final data = VehicleData(
-        today: hoy,
-        vehicles: [
-          Vehicle(
-            id: 1,
-            name: 'La vieja',
-            kind: VehicleKind.moto,
-            active: false,
-            services: 1,
-            spent: const {},
-          ),
-        ],
-        tasks: [tarea(cadaMeses: 6)],
-        services: [servicio('2025-01-01')],
-      );
-      expect(avisosDeVehiculos(data: data, hoy: hoy), isEmpty);
     });
   });
 }

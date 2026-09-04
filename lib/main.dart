@@ -22,7 +22,6 @@ import 'data/repositories/avisos_repository.dart';
 import 'data/repositories/debt_repository.dart';
 import 'data/repositories/spend_repository.dart';
 import 'data/repositories/tema_repository.dart';
-import 'data/repositories/vehicle_repository.dart';
 import 'data/services/api_client.dart';
 import 'data/services/avisos_service.dart';
 import 'data/services/comprobante.dart';
@@ -61,9 +60,6 @@ void main() {
         ),
         ChangeNotifierProvider(
           create: (_) => SpendRepository(api: api),
-        ),
-        ChangeNotifierProvider(
-          create: (_) => VehicleRepository(api: api),
         ),
         // El tema se lee al crearlo: es una preferencia del telefono, no de la
         // cuenta, asi que no espera a que nadie entre.

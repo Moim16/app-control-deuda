@@ -11,13 +11,10 @@
 // =============================================================================
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
-import '../../../data/repositories/vehicle_repository.dart';
 import '../../settings/widgets/settings_screen.dart';
 import '../../spend/widgets/spend_screen.dart';
 import '../../summary/widgets/summary_screen.dart';
-import '../../vehicle/widgets/vehicle_screen.dart';
 
 class Cascara extends StatefulWidget {
   const Cascara({super.key});
@@ -30,16 +27,6 @@ class _CascaraState extends State<Cascara> {
   int _i = 0;
 
   @override
-  void initState() {
-    super.initState();
-    // El vehiculo se pide aunque no se abra su pestaña: sus recordatorios
-    // ("le toca el aceite") hacen falta igual, y son dos docenas de filas.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) context.read<VehicleRepository>().load();
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(
@@ -47,7 +34,6 @@ class _CascaraState extends State<Cascara> {
         children: const [
           SummaryScreen(),
           SpendScreen(),
-          VehicleScreen(),
           SettingsScreen(),
         ],
       ),
@@ -64,11 +50,6 @@ class _CascaraState extends State<Cascara> {
             icon: Icon(Icons.shopping_cart_outlined),
             selectedIcon: Icon(Icons.shopping_cart),
             label: 'Gastos',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.two_wheeler_outlined),
-            selectedIcon: Icon(Icons.two_wheeler),
-            label: 'Vehículo',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings_outlined),

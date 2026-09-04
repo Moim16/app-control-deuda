@@ -282,8 +282,8 @@ class _Avisos extends StatelessWidget {
               style: TextStyle(fontSize: 15, color: t.ink),
             ),
             subtitle: Text(
-              'Los pagos acordados y lo que le toca al vehículo. Funciona sin '
-              'internet: el teléfono los guarda y los muestra a su hora.',
+              'Los pagos acordados. Funciona sin internet: el teléfono los '
+              'guarda y los muestra a su hora.',
               style: TextStyle(fontSize: 12.5, color: t.faint, height: 1.4),
             ),
           ),
@@ -320,7 +320,7 @@ class _Avisos extends StatelessWidget {
                         'Se permiten desde los ajustes del teléfono.'
                     : avisos.puestos == 0
                         ? 'Nada que recordar todavía: los avisos salen de los '
-                            'acuerdos de pago y de las tareas del vehículo.'
+                            'acuerdos de pago.'
                         : '${plural(avisos.puestos, 'recordatorio puesto', 'recordatorios puestos')}.',
                 tono: !avisos.permiso
                     ? Tono.malo

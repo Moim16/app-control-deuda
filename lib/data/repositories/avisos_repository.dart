@@ -14,7 +14,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../domain/avisos.dart';
 import '../../domain/models/debt.dart';
-import '../../domain/models/vehicle.dart';
 import '../services/avisos_service.dart';
 
 class AvisosRepository extends ChangeNotifier {
@@ -90,12 +89,11 @@ class AvisosRepository extends ChangeNotifier {
   }
 
   /// Vuelve a poner todos los avisos con los datos de ahora. Se llama cada vez
-  /// que cambian las deudas o el vehículo.
+  /// que cambian las deudas.
   ///
   /// Con los avisos apagados no hace nada: ni siquiera calcula.
   Future<void> sincronizar({
     required List<Debt> deudas,
-    required VehicleData? vehiculos,
     required String hoy,
     required bool Function(Debt) esCobro,
     required String Function(num monto, String moneda) plata,
@@ -111,16 +109,13 @@ class AvisosRepository extends ChangeNotifier {
       return;
     }
 
-    final avisos = <Aviso>[
-      ...avisosDeDeudas(
-        deudas: deudas,
-        hoy: hoy,
-        esCobro: esCobro,
-        plata: plata,
-        fecha: fecha,
-      ),
-      if (vehiculos != null) ...avisosDeVehiculos(data: vehiculos, hoy: hoy),
-    ];
+    final avisos = avisosDeDeudas(
+      deudas: deudas,
+      hoy: hoy,
+      esCobro: esCobro,
+      plata: plata,
+      fecha: fecha,
+    );
 
     _puestos = await _service.reprogramar(avisos, hora: _hora);
     notifyListeners();
